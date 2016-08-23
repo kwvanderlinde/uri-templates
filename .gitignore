@@ -1,0 +1,8 @@
+# Composer files
+vendor/
+composer.lock
+
+# Various temporary files
+*~
+\#*\#
+.#*
