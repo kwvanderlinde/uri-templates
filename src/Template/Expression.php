@@ -1,0 +1,131 @@
+<?php
+namespace Uri\Template;
+
+use \Base\Exceptions\LogicError;
+use \Uri\Lexical\CharacterTypes;
+
+class Expression implements Part {
+	private $charTypes;
+	private $operator;
+	private $variables;
+
+	public function __construct(CharacterTypes $charTypes, Operator $operator, array $variables) {
+		$this->charTypes = $charTypes;
+		$this->operator = $operator;
+		$this->variables = $variables;
+	}
+
+	public function expand(array $variables) {
+		$parts = array();
+		foreach ($this->variables as $var) {
+			$value = @$variables[$var->getName()];
+			if (\is_null($value)) {
+				continue;
+			}
+
+			$expandedParts = $this->expandValue($var, $value);
+
+			$parts = \array_merge($parts, \iterator_to_array($expandedParts));
+		}
+
+		//\var_dump($parts);
+
+		return $this->operator->combineValue($parts);
+	}
+
+	public function getOperator() {
+		return $this->operator;
+	}
+
+	public function getVariables() {
+		return $this->variables;
+	}
+
+	protected function expandValue(Variable $var, $value) {
+		if ($this->operator->expandNamedParameters()) {
+			$prefixVar = $var->getName();
+		}
+		else {
+			$prefixVar = null;
+		}
+
+		if (\is_string($value)) {
+			// Exploded strings are the same as non-exploded strings.
+			$expandedValue = $var->getValuePrefix($this->expandNotExplodedValue($value));
+			yield $this->expandKeyValueImpl($prefixVar, $expandedValue);
+		}
+		else if (!\is_array($value)) {
+			throw new LogicError('Unrecognized value type: '. \gettype($value));
+		}
+		else if (!$var->isExploded()) {
+			// Do not explode the composite value.
+			$expandedValue = $this->expandNotExplodedValue($value);
+			yield $this->expandKeyValueImpl($prefixVar, $expandedValue);
+		}
+		else {
+			// Explode the composite value.
+			$getKey = \Uri\isSequentialArray($value)
+				? static function ($key) use ($prefixVar) { return $prefixVar; }
+				: static function ($key) { return $key; };
+
+			foreach ($value as $key => $v) {
+				yield $this->expandKeyValueImpl(
+					$getKey($key),
+					$this->expandNotExplodedValue($v)
+				);
+			}
+		}
+	}
+
+	protected function expandKeyValueImpl($key = null, $value) {
+		/* Any explosions have already taken place, so we don't have to exploded
+		 *`$value` here.
+		 */
+		if (\is_null($value)) {
+			return null;
+		}
+
+		return $this->operator->combineKeyWithValue($key, $value);
+	}
+
+	protected function expandNotExplodedValue($value) {
+		if (\is_string($value)) {
+			return $this->operator->encode($value);
+		}
+		else if (\is_array($value)) {
+			$parts = [];
+			if (\Uri\isSequentialArray($value)) {
+				foreach ($value as $v) {
+					if (\is_null($v)) {
+						continue;
+					}
+
+					$parts[] = $this->operator->encode($v);
+				}
+			}
+			else {
+				foreach ($value as $k => $v) {
+					if (\is_null($v)) {
+						continue;
+					}
+
+					$parts[] = $this->operator->encode($k).','.$this->operator->encode($v);
+				}
+			}
+
+			if (empty($parts)) {
+				return null;
+			}
+
+			return \implode(',', $parts);
+		}
+		else {
+			throw new LogicError('Unrecognized value type: '. \gettype($value));
+		}
+	}
+
+	protected function encode($string) {
+		return $this->operator->encode($string);
+	}
+}
+?>
