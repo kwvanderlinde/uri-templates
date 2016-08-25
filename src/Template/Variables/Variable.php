@@ -1,5 +1,5 @@
 <?php
-namespace Uri\Template;
+namespace Uri\Template\Variables;
 
 interface Variable {
 	function getName();

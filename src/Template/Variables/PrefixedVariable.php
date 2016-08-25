@@ -1,5 +1,5 @@
 <?php
-namespace Uri\Template;
+namespace Uri\Template\Variables;
 
 class PrefixedVariable extends AbstractVariable {
 	private $prefixCount;

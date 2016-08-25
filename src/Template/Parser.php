@@ -6,6 +6,10 @@ use \Base\Exceptions\LogicError;
 use \Uri\Lexical\CharacterTypes;
 use \Uri\Lexical\RegexCharacterType;
 
+use \Uri\Template\Variables\ExplodedVariable;
+use \Uri\Template\Variables\PrefixedVariable;
+use \Uri\Template\Variables\SimpleVariable;
+
 class Parser {
 	private $characterTypes;
 	private $operators;

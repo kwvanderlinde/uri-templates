@@ -3,6 +3,7 @@ namespace Uri\Template;
 
 use \Base\Exceptions\LogicError;
 use \Uri\Lexical\CharacterTypes;
+use \Uri\Template\Variables\Variable;
 
 class Expression implements Part {
 	private $charTypes;
