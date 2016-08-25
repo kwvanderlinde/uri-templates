@@ -20,9 +20,9 @@ class Expression implements Part {
 		foreach ($this->variables as $var) {
 			$value = @$variables[$var->getName()];
 
-			$expandedParts = $this->expandValue($var, $value);
+			$expandedParts = \iterator_to_array($this->expandValue($var, $value));
 
-			$parts = \array_merge($parts, \iterator_to_array($expandedParts));
+			$parts = \array_merge($parts, $expandedParts);
 		}
 
 		return $this->operator->combineValue($parts);
@@ -36,35 +36,40 @@ class Expression implements Part {
 			$prefixVar = null;
 		}
 
-		if (\is_null($value)) {
-			yield $value;
-		}
-		else if (\is_array($value)) {
-			if (!$var->isExploded()) {
-				// Do not explode the composite value.
-				$expandedValue = $this->expandNotExplodedValue($value);
-				yield $this->expandKeyValueImpl($prefixVar, $expandedValue);
-			}
-			else {
-				// Explode the composite value.
-				$getKey = \Uri\isSequentialArray($value)
-					? static function ($key) use ($prefixVar) { return $prefixVar; }
-					: static function ($key) { return $key; };
+		return $this->handle(
+			$value,
+			new \EmptyIterator,
+			[
+				'string' => function ($value) use ($var, $prefixVar) {
+					// Exploded strings are the same as non-exploded strings.
+					$expandedValue = $var->getValuePrefix($this->expandNotExplodedValue($value));
+					yield $this->expandKeyValueImpl($prefixVar, $expandedValue);
+				},
 
-				foreach ($value as $key => $v) {
-					yield $this->expandKeyValueImpl(
-						$getKey($key),
-						$this->expandNotExplodedValue($v)
-					);
+				'array' => function ($value, $isSequential) use ($var, $prefixVar) {
+					if (!$var->isExploded()) {
+						// Do not explode the composite value.
+						$expandedValue = $this->expandNotExplodedValue($value);
+						$result = $this->expandKeyValueImpl($prefixVar, $expandedValue);
+						yield $result;
+					}
+					else {
+						// Explode the composite value.
+						$getKey = $isSequential
+						? static function ($key) use ($prefixVar) { return $prefixVar; }
+						: static function ($key) { return $key; };
+
+						foreach ($value as $key => $v) {
+							$result = $this->expandKeyValueImpl(
+								$getKey($key),
+								$this->expandNotExplodedValue($v)
+							);
+							yield $result;
+						}
+					}
 				}
-			}
-		}
-		else {
-			$value = (string)$value;
-			// Exploded strings are the same as non-exploded strings.
-			$expandedValue = $var->getValuePrefix($this->expandNotExplodedValue($value));
-			yield $this->expandKeyValueImpl($prefixVar, $expandedValue);
-		}
+			]
+		);
 	}
 
 	protected function expandKeyValueImpl($key = null, $value) {
@@ -79,40 +84,64 @@ class Expression implements Part {
 	}
 
 	protected function expandNotExplodedValue($value) {
+		return $this->handle(
+			$value,
+			null,
+			[
+				'string' => function ($value) {
+					return $this->operator->encode($value);
+				},
+
+				'array' => function ($array, $isSequential) {
+					$format = (
+						$isSequential
+						? function ($key, $value) {
+							return $this->operator->encode($value);
+						}
+						: function ($key, $value) {
+							return $this->operator->encode($key).','.$this->operator->encode($value);
+						}
+					);
+
+					$parts = [];
+					foreach ($array as $key => $value) {
+						if (\is_null($value)) {
+							continue;
+						}
+
+						$parts[] = $format($key, $value);
+					}
+
+					if (empty($parts)) {
+						return null;
+					}
+
+					return \implode(',', $parts);
+				}
+			]
+		);
+	}
+
+	protected function handle($value, $defaultValue, array $handlers) {
 		if (\is_null($value)) {
-			return null;
+			return $defaultValue;
 		}
-		else if (\is_array($value)) {
-			$parts = [];
-			if (\Uri\isSequentialArray($value)) {
-				foreach ($value as $v) {
-					if (\is_null($v)) {
-						continue;
-					}
 
-					$parts[] = $this->operator->encode($v);
-				}
-			}
-			else {
-				foreach ($value as $k => $v) {
-					if (\is_null($v)) {
-						continue;
-					}
-
-					$parts[] = $this->operator->encode($k).','.$this->operator->encode($v);
-				}
-			}
-
-			if (empty($parts)) {
-				return null;
-			}
-
-			return \implode(',', $parts);
+		if (\is_array($value)) {
+			$handlerKey = 'array';
+			$args = [ $value, \Uri\isSequentialArray($value) ];
 		}
 		else {
-			$value = (string)$value;
-			return $this->operator->encode($value);
+			$handlerKey = 'string';
+			$args = [ (string)$value ];
 		}
+
+		$handler = @$handlers[$handlerKey];
+		if (\is_null($handler)) {
+			return $defaultValue;
+		}
+
+		return \call_user_func_array($handler, $args);
 	}
 }
 ?>
