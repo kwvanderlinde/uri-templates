@@ -1,5 +1,5 @@
 <?php
-namespace Uri\Template;
+namespace Uri\Template\Parts;
 
 interface Part {
 	function expand(array $variables);

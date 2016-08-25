@@ -21,8 +21,12 @@ interface CharacterType {
 	 * For example, if the character type represents digits, a valid result
 	 * would be `[0-9]`.
 	 *
+	 * This method must be compatible with `contains`. That is, we should have
+	 *
+	 *     $this->contains($char) === \preg_match($this->getRegexFragment(), $char)
+	 *
 	 * @return string
-	 * A regex fragment which matches any characeter in the type.
+	 * A regex fragment which matches any character in the type.
 	 */
 	function getRegexFragment();
 

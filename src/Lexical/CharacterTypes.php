@@ -27,7 +27,7 @@ class CharacterTypes {
 	}
 
 	public function __unset($name) {
-		unset($type->types[$name]);
+		unset($this->types[$name]);
 	}
 }
 ?>

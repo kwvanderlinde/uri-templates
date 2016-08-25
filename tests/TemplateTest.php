@@ -1,6 +1,11 @@
 <?php
 use PHPUnit\Framework\TestCase;
 
+use Uri\Lexical\CharacterTypes;
+use Uri\Lexical\RegexCharacterType;
+use \Uri\Template\Operator;
+use \Uri\Template\ValueDispatcher;
+
 class TemplateTest extends TestCase
 {
 	private $variables = [
@@ -21,14 +26,172 @@ class TemplateTest extends TestCase
 		'path' => '/foo/bar',
 		'undef' => null,
 		'var' => 'value',
-		'v' => '6',
-		'x' => '1024',
-		'y' => '768',
+		'v' => 6,
+		'x' => 1024,
+		'y' => 768,
 		'who' => 'fred'
 	];
 
+	private $operators;
+
+	public function __construct($name = null, array $data = [], $dataName = '') {
+		parent::__construct($name, $data, $dataName);
+
+		$characterTypes = new CharacterTypes;
+		$characterTypes->genDelims = new RegexCharacterType('[:\\/?#\\[\\]@]');
+		$characterTypes->subDelims = new RegexCharacterType('[!$&\'()*+,;=]');
+		$characterTypes->unreserved = new RegexCharacterType('[A-Za-z0-9\\-._~]');
+		$characterTypes->reserved =
+			$characterTypes->genDelims->or_(
+				$characterTypes->subDelims
+			);
+
+		$this->operators = array(
+			'' => new Operator($characterTypes, '', ',', false, false, false),
+			'+' => new Operator($characterTypes, '', ',', false, false, true),
+			'#' => new Operator($characterTypes, '#', ',', false, false, true),
+			'.' => new Operator($characterTypes, '.', '.', false, false, false),
+			'/' => new Operator($characterTypes, '/', '/', false, false, false),
+			';' => new Operator($characterTypes, ';', ';', true, false, false),
+			'?' => new Operator($characterTypes, '?', '&', true, true, false),
+			'&' => new Operator($characterTypes, '&', '&', true, true, false),
+		);
+	}
+
 	/**
-	 * @dataProvider templateStrings
+	 * @dataProvider valueDispatcherProvider
+	 */
+	public function testValueDispatcher($value, $default, array $handlers, $expected) {
+		$dispatcher = new ValueDispatcher;
+
+		$result = $dispatcher->handle($value, $default, $handlers);
+
+		$this->assertSame($expected, $result);
+	}
+
+	public function valueDispatcherProvider() {
+		$stringValue = '25';
+		$arrayValue = [ 'test' ];
+		$defaultValue = new \stdClass();
+
+		$stringHandler = function () { return 'string'; };
+		$arrayHandler = function () { return 'array'; };
+
+		$allHandlers = [ 'string' => $stringHandler, 'array' => $arrayHandler ];
+		$noStringHandlers = [ 'array' => $arrayHandler ];
+		$noArrayHandlers = [ 'string' => $stringHandler ];
+
+        return [
+	        [ $stringValue, $defaultValue, $allHandlers, 'string' ],
+	        [ $arrayValue, $defaultValue, $allHandlers, 'array' ],
+	        [ $stringValue, $defaultValue, $noStringHandlers, $defaultValue ],
+	        [ $arrayValue, $defaultValue, $noStringHandlers, 'array' ],
+	        [ $stringValue, $defaultValue, $noArrayHandlers, 'string' ],
+	        [ $arrayValue, $defaultValue, $noArrayHandlers, $defaultValue ],
+	        [ null, $defaultValue, $allHandlers, $defaultValue ],
+        ];
+	}
+
+	/**
+	 * @dataProvider operatorExpandsNamedParametersProvider
+	 */
+	public function testOperatorExpandsNamedParameters(Operator $operator, $expected) {
+		$this->assertEquals($expected, $operator->expandNamedParameters());
+	}
+
+	public function operatorExpandsNamedParametersProvider() {
+		return [
+			[ $this->operators[''], false ],
+			[ $this->operators['+'], false ],
+			[ $this->operators['#'], false ],
+			[ $this->operators['.'], false ],
+			[ $this->operators['/'], false ],
+			[ $this->operators[';'], true ],
+			[ $this->operators['?'], true ],
+			[ $this->operators['&'], true ],
+		];
+	}
+
+	/**
+	 * @dataProvider operatorCombineValueProvider
+	 */
+	public function testOperatorCombineValue(Operator $operator, $parts, $expected) {
+		$this->assertEquals($expected, $operator->combineValue($parts));
+	}
+
+	public function operatorCombineValueProvider() {
+		return [
+			[ $this->operators[''], ['', 'b', null, 'c'], ',b,c' ],
+			[ $this->operators['+'], ['', 'b', null, 'c'], ',b,c' ],
+			[ $this->operators['#'], ['', 'b', null, 'c'], '#,b,c' ],
+			[ $this->operators['.'], ['', 'b', null, 'c'], '..b.c' ],
+			[ $this->operators['/'], ['', 'b', null, 'c'], '//b/c' ],
+			[ $this->operators[';'], ['', 'b', null, 'c'], ';;b;c' ],
+			[ $this->operators['?'], ['', 'b', null, 'c'], '?&b&c' ],
+			[ $this->operators['&'], ['', 'b', null, 'c'], '&&b&c' ],
+		];
+	}
+
+	/**
+	 * @dataProvider operatorCombineKeyWithValueProvider
+	 */
+	public function testOperatorCombineKeyWithValue(Operator $operator, $key, $value, $expected) {
+		$this->assertEquals($expected, $operator->combineKeyWithValue($key, $value));
+	}
+
+	public function operatorCombineKeyWithValueProvider() {
+		return [
+			[ $this->operators[''], 'a key', 'a_value', 'a%20key=a_value' ],
+			[ $this->operators['+'], 'a key', 'a_value', 'a%20key=a_value' ],
+			[ $this->operators['#'], 'a key', 'a_value', 'a%20key=a_value' ],
+			[ $this->operators['.'], 'a key', 'a_value', 'a%20key=a_value' ],
+			[ $this->operators['/'], 'a key', 'a_value', 'a%20key=a_value' ],
+			[ $this->operators[';'], 'a key', 'a_value', 'a%20key=a_value' ],
+			[ $this->operators['?'], 'a key', 'a_value', 'a%20key=a_value' ],
+			[ $this->operators['&'], 'a key', 'a_value', 'a%20key=a_value' ],
+			[ $this->operators[''], 'a key', '', 'a%20key' ],
+			[ $this->operators['+'], 'a key', '', 'a%20key' ],
+			[ $this->operators['#'], 'a key', '', 'a%20key' ],
+			[ $this->operators['.'], 'a key', '', 'a%20key' ],
+			[ $this->operators['/'], 'a key', '', 'a%20key' ],
+			[ $this->operators[';'], 'a key', '', 'a%20key' ],
+			[ $this->operators['?'], 'a key', '', 'a%20key=' ],
+			[ $this->operators['&'], 'a key', '', 'a%20key=' ],
+			[ $this->operators[''], null, 'a_value', 'a_value' ],
+			[ $this->operators['+'], null, 'a_value', 'a_value' ],
+			[ $this->operators['#'], null, 'a_value', 'a_value' ],
+			[ $this->operators['.'], null, 'a_value', 'a_value' ],
+			[ $this->operators['/'], null, 'a_value', 'a_value' ],
+			[ $this->operators[';'], null, 'a_value', 'a_value' ],
+			[ $this->operators['?'], null, 'a_value', 'a_value' ],
+			[ $this->operators['&'], null, 'a_value', 'a_value' ],
+		];
+	}
+
+	/**
+	 * @dataProvider operatorEncodeProvider
+	 */
+	public function testOperatorEncode(Operator $operator, $value, $expected) {
+		$this->assertEquals($expected, $operator->encode($value));
+	}
+
+	public function operatorEncodeProvider() {
+		$string = 'a/b$c and then';
+
+		return [
+			[ $this->operators[''], $string, 'a%2Fb%24c%20and%20then' ],
+			[ $this->operators['+'], $string, 'a/b$c%20and%20then' ],
+			[ $this->operators['#'], $string, 'a/b$c%20and%20then' ],
+			[ $this->operators['.'], $string, 'a%2Fb%24c%20and%20then' ],
+			[ $this->operators['/'], $string, 'a%2Fb%24c%20and%20then' ],
+			[ $this->operators[';'], $string, 'a%2Fb%24c%20and%20then' ],
+			[ $this->operators['?'], $string, 'a%2Fb%24c%20and%20then' ],
+			[ $this->operators['&'], $string, 'a%2Fb%24c%20and%20then' ],
+		];
+	}
+
+	/**
+	 * @dataProvider templateStringsAndExpansions
 	 */
 	public function testTemplate($templateString, $expected)
 	{
@@ -38,7 +201,39 @@ class TemplateTest extends TestCase
 		$this->assertEquals($expected, $result);
 	}
 
-	public function templateStrings()
+	/**
+	 * @dataProvider templateStrings
+	 */
+	public function testParser($templateString, $expectedException = null) {
+		if (!\is_null($expectedException)) {
+			$this->expectException($expectedException);
+		}
+
+		$parser = new \Uri\Template\Parser();
+		$template = $parser->parse($templateString);
+	}
+
+	public function templateStrings() {
+		// Give all the strings from templateStringsAndExpansions.
+		foreach ($this->templateStringsAndExpansions() as list($string, $_)) {
+			yield [$string];
+		}
+
+		foreach ($this->malformedTemplateStrings() as $string) {
+			yield [ $string, \Base\Exceptions\LogicError::class ];
+		}
+	}
+
+	public function malformedTemplateStrings() {
+		return [
+			'{var',
+			'{x,$y}',
+			'/bad/encoded/%ZF/here',
+			'/bad/char/"',
+		];
+	}
+
+	public function templateStringsAndExpansions()
 	{
 		return [
 			// Simple string expansion.

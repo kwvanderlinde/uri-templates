@@ -1,5 +1,5 @@
 <?php
-namespace Uri\Template;
+namespace Uri\Template\Parts;
 
 use \Uri\Lexical\CharacterTypes;
 

@@ -8,6 +8,7 @@
   <logging>
     <log type="coverage-html" target="./untracked/tests/reports/html" lowUpperBound="35" highLowerBound="70" />
     <log type="coverage-clover" target="./untracked/tests/logs/coverage.xml" />
+    <log type="json" target="./untracked/tests/logs/logfile.json" />
     <log type="junit" target="./untracked/tests/logs/logfile.xml" />
   </logging>
   <filter>

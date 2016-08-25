@@ -1,5 +1,5 @@
 <?php
-namespace Uri\Template;
+namespace Uri\Template\Variables;
 
 abstract class AbstractVariable implements Variable {
 	private $name;

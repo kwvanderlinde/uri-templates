@@ -6,6 +6,14 @@ use \Base\Exceptions\LogicError;
 use \Uri\Lexical\CharacterTypes;
 use \Uri\Lexical\RegexCharacterType;
 
+use \Uri\Template\Parts\Expression;
+use \Uri\Template\Parts\Literal;
+use \Uri\Template\Parts\Part;
+
+use \Uri\Template\Variables\Exploded as ExplodedVariable;
+use \Uri\Template\Variables\Prefixed as PrefixedVariable;
+use \Uri\Template\Variables\Simple as SimpleVariable;
+
 class Parser {
 	private $characterTypes;
 	private $operators;
@@ -102,10 +110,6 @@ class Parser {
 			$remaining = $rest;
 		}
 
-		if (\strlen($rest)) {
-			throw new LogicError("Extra characters after URI template: '$rest'");
-		}
-
 		return new \Uri\Template(...$parts);
 	}
 
@@ -116,7 +120,9 @@ class Parser {
 
 		$operatorName = $matches['operator'];
 		if (!\array_key_exists($operatorName, $this->operators)) {
-			return [false, $string];
+			// @codeCoverageIgnoreStart
+			throw new LogicError("Missing operator object for '$operatorName'");
+			// @codeCoverageIgnoreEnd
 		}
 		$operator = $this->operators[$operatorName];
 		$variables = \explode(',', $matches['variables']);
@@ -144,18 +150,12 @@ class Parser {
 	}
 
 	protected function parseLiteral($string) {
-		if (!\preg_match("/^(?<literal>(?:{$this->getLiteralCharRegex()})*)(?<rest>\X*)$/u", $string, $matches)) {
+		$result = \preg_match("/^(?<literal>(?:{$this->getLiteralCharRegex()})*)(?<rest>\X*)$/u", $string, $matches);
+		if (!$result || !\strlen($matches['literal'])) {
 			return [false, $string];
 		}
-		$literal = $matches['literal'];
-		if (\strlen($literal)) {
-			$literal = new Literal($this->characterTypes, $literal);
-		}
-		else {
-			$literal = false;
-		}
 
-		return [$literal, $matches['rest']];
+		return [new Literal($this->characterTypes, $matches['literal']), $matches['rest']];
 	}
 
 	protected function getVarSpecRegex() {
