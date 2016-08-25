@@ -5,6 +5,7 @@ use \Base\Exceptions\LogicError;
 use \Uri\Lexical\CharacterTypes;
 use \Uri\Template\Variables\Variable;
 use \Uri\Template\Operator;
+use \Uri\Template\ValueDispatcher;
 
 class Expression implements Part {
 	private $charTypes;
@@ -38,7 +39,7 @@ class Expression implements Part {
 			$prefixVar = null;
 		}
 
-		return $this->handle(
+		return (new ValueDispatcher)->handle(
 			$value,
 			new \EmptyIterator,
 			[
@@ -86,7 +87,7 @@ class Expression implements Part {
 	}
 
 	protected function expandNotExplodedValue($value) {
-		return $this->handle(
+		return (new ValueDispatcher)->handle(
 			$value,
 			null,
 			[
@@ -122,28 +123,6 @@ class Expression implements Part {
 				}
 			]
 		);
-	}
-
-	protected function handle($value, $defaultValue, array $handlers) {
-		if (\is_null($value)) {
-			return $defaultValue;
-		}
-
-		if (\is_array($value)) {
-			$handlerKey = 'array';
-			$args = [ $value, \Uri\isSequentialArray($value) ];
-		}
-		else {
-			$handlerKey = 'string';
-			$args = [ (string)$value ];
-		}
-
-		$handler = @$handlers[$handlerKey];
-		if (\is_null($handler)) {
-			return $defaultValue;
-		}
-
-		return \call_user_func_array($handler, $args);
 	}
 }
 ?>
