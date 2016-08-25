@@ -28,7 +28,7 @@ class TemplateTest extends TestCase
 	];
 
 	/**
-	 * @dataProvider templateStrings
+	 * @dataProvider templateStringsAndExpansions
 	 */
 	public function testTemplate($templateString, $expected)
 	{
@@ -38,7 +38,39 @@ class TemplateTest extends TestCase
 		$this->assertEquals($expected, $result);
 	}
 
-	public function templateStrings()
+	/**
+	 * @dataProvider templateStrings
+	 */
+	public function testParser($templateString, $expectedException = null) {
+		if (!\is_null($expectedException)) {
+			$this->expectException($expectedException);
+		}
+
+		$parser = new \Uri\Template\Parser();
+		$template = $parser->parse($templateString);
+	}
+
+	public function templateStrings() {
+		// Give all the strings from templateStringsAndExpansions.
+		foreach ($this->templateStringsAndExpansions() as list($string, $_)) {
+			yield [$string];
+		}
+
+		foreach ($this->malformedTemplateStrings() as $string) {
+			yield [ $string, \Base\Exceptions\LogicError::class ];
+		}
+	}
+
+	public function malformedTemplateStrings() {
+		return [
+			'{var',
+			'{x,$y}',
+			'/bad/encoded/%ZF/here',
+			'/bad/char/"',
+		];
+	}
+
+	public function templateStringsAndExpansions()
 	{
 		return [
 			// Simple string expansion.

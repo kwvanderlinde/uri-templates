@@ -142,18 +142,12 @@ class Parser {
 	}
 
 	protected function parseLiteral($string) {
-		if (!\preg_match("/^(?<literal>(?:{$this->getLiteralCharRegex()})*)(?<rest>\X*)$/u", $string, $matches)) {
+		$result = \preg_match("/^(?<literal>(?:{$this->getLiteralCharRegex()})*)(?<rest>\X*)$/u", $string, $matches);
+		if (!$result || !\strlen($matches['literal'])) {
 			return [false, $string];
 		}
-		$literal = $matches['literal'];
-		if (\strlen($literal)) {
-			$literal = new Literal($this->characterTypes, $literal);
-		}
-		else {
-			$literal = false;
-		}
 
-		return [$literal, $matches['rest']];
+		return [new Literal($this->characterTypes, $matches['literal']), $matches['rest']];
 	}
 
 	protected function getVarSpecRegex() {
