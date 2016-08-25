@@ -21,9 +21,9 @@ class TemplateTest extends TestCase
 		'path' => '/foo/bar',
 		'undef' => null,
 		'var' => 'value',
-		'v' => '6',
-		'x' => '1024',
-		'y' => '768',
+		'v' => 6,
+		'x' => 1024,
+		'y' => 768,
 		'who' => 'fred'
 	];
 

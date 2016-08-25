@@ -25,8 +25,6 @@ class Expression implements Part {
 			$parts = \array_merge($parts, \iterator_to_array($expandedParts));
 		}
 
-		//\var_dump($parts);
-
 		return $this->operator->combineValue($parts);
 	}
 
@@ -41,31 +39,31 @@ class Expression implements Part {
 		if (\is_null($value)) {
 			yield $value;
 		}
-		else if (\is_string($value)) {
+		else if (\is_array($value)) {
+			if (!$var->isExploded()) {
+				// Do not explode the composite value.
+				$expandedValue = $this->expandNotExplodedValue($value);
+				yield $this->expandKeyValueImpl($prefixVar, $expandedValue);
+			}
+			else {
+				// Explode the composite value.
+				$getKey = \Uri\isSequentialArray($value)
+					? static function ($key) use ($prefixVar) { return $prefixVar; }
+					: static function ($key) { return $key; };
+
+				foreach ($value as $key => $v) {
+					yield $this->expandKeyValueImpl(
+						$getKey($key),
+						$this->expandNotExplodedValue($v)
+					);
+				}
+			}
+		}
+		else {
+			$value = (string)$value;
 			// Exploded strings are the same as non-exploded strings.
 			$expandedValue = $var->getValuePrefix($this->expandNotExplodedValue($value));
 			yield $this->expandKeyValueImpl($prefixVar, $expandedValue);
-		}
-		else if (!\is_array($value)) {
-			throw new LogicError('Unrecognized value type: '. \gettype($value));
-		}
-		else if (!$var->isExploded()) {
-			// Do not explode the composite value.
-			$expandedValue = $this->expandNotExplodedValue($value);
-			yield $this->expandKeyValueImpl($prefixVar, $expandedValue);
-		}
-		else {
-			// Explode the composite value.
-			$getKey = \Uri\isSequentialArray($value)
-				? static function ($key) use ($prefixVar) { return $prefixVar; }
-				: static function ($key) { return $key; };
-
-			foreach ($value as $key => $v) {
-				yield $this->expandKeyValueImpl(
-					$getKey($key),
-					$this->expandNotExplodedValue($v)
-				);
-			}
 		}
 	}
 
@@ -83,9 +81,6 @@ class Expression implements Part {
 	protected function expandNotExplodedValue($value) {
 		if (\is_null($value)) {
 			return null;
-		}
-		else if (\is_string($value)) {
-			return $this->operator->encode($value);
 		}
 		else if (\is_array($value)) {
 			$parts = [];
@@ -115,7 +110,8 @@ class Expression implements Part {
 			return \implode(',', $parts);
 		}
 		else {
-			throw new LogicError('Unrecognized value type: '. \gettype($value));
+			$value = (string)$value;
+			return $this->operator->encode($value);
 		}
 	}
 }
