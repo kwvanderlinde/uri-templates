@@ -1,7 +1,7 @@
 <?php
 namespace Uri\Template\Variables;
 
-class PrefixedVariable extends AbstractVariable {
+class Prefixed extends AbstractVariable {
 	private $prefixCount;
 
 	public function __construct($name, $prefixCount) {
