@@ -1,9 +1,10 @@
 <?php
-namespace Uri\Template;
+namespace Uri\Template\Parts;
 
 use \Base\Exceptions\LogicError;
 use \Uri\Lexical\CharacterTypes;
 use \Uri\Template\Variables\Variable;
+use \Uri\Template\Operator;
 
 class Expression implements Part {
 	private $charTypes;

@@ -6,6 +6,10 @@ use \Base\Exceptions\LogicError;
 use \Uri\Lexical\CharacterTypes;
 use \Uri\Lexical\RegexCharacterType;
 
+use \Uri\Template\Parts\Expression;
+use \Uri\Template\Parts\Literal;
+use \Uri\Template\Parts\Part;
+
 use \Uri\Template\Variables\Exploded as ExplodedVariable;
 use \Uri\Template\Variables\Prefixed as PrefixedVariable;
 use \Uri\Template\Variables\Simple as SimpleVariable;
