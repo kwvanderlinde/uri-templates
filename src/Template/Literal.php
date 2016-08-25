@@ -21,11 +21,5 @@ class Literal implements Part {
 	public function expand(array $variables) {
 		return $this->string;
 	}
-
-	public function __debugInfo() {
-		return array(
-			'string' => $this->string
-		);
-	}
 }
 ?>

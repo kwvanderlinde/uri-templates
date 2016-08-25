@@ -20,20 +20,8 @@ class Operator {
 		$this->permitSpecialCharacters = $permitSpecialCharacters;
 	}
 
-	public function getPrefix() {
-		return $this->prefix;
-	}
-
-	public function getSeparator() {
-		return $this->separator;
-	}
-
 	public function expandNamedParameters() {
 		return $this->expandNamedParameters;
-	}
-
-	public function requireFormStyleParameters() {
-		return $this->requireFormStyleParameters;
 	}
 
 	public function combineValue(array $parts) {
