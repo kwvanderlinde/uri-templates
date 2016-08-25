@@ -20,10 +20,6 @@ class RegexCharacterType extends AbstractCharacterType implements CharacterType 
 		$this->regex = $regex;
 	}
 
-	public function contains($character) {
-		return \preg_match("/{$this->getRegexFragment()}/u", $character);
-	}
-
 	public function getRegexFragment() {
 		return $this->regex;
 	}

@@ -8,16 +8,6 @@ class UnionCharacterType extends AbstractCharacterType implements CharacterType 
 		$this->types = $types;
 	}
 
-	public function contains($character) {
-		foreach ($this->types as $type) {
-			if ($type->contains($character)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
 	public function getRegexFragment() {
 		return \implode(
 			'|',
