@@ -19,9 +19,6 @@ class Expression implements Part {
 		$parts = array();
 		foreach ($this->variables as $var) {
 			$value = @$variables[$var->getName()];
-			if (\is_null($value)) {
-				continue;
-			}
 
 			$expandedParts = $this->expandValue($var, $value);
 
@@ -33,14 +30,6 @@ class Expression implements Part {
 		return $this->operator->combineValue($parts);
 	}
 
-	public function getOperator() {
-		return $this->operator;
-	}
-
-	public function getVariables() {
-		return $this->variables;
-	}
-
 	protected function expandValue(Variable $var, $value) {
 		if ($this->operator->expandNamedParameters()) {
 			$prefixVar = $var->getName();
@@ -49,7 +38,10 @@ class Expression implements Part {
 			$prefixVar = null;
 		}
 
-		if (\is_string($value)) {
+		if (\is_null($value)) {
+			yield $value;
+		}
+		else if (\is_string($value)) {
 			// Exploded strings are the same as non-exploded strings.
 			$expandedValue = $var->getValuePrefix($this->expandNotExplodedValue($value));
 			yield $this->expandKeyValueImpl($prefixVar, $expandedValue);
@@ -89,7 +81,10 @@ class Expression implements Part {
 	}
 
 	protected function expandNotExplodedValue($value) {
-		if (\is_string($value)) {
+		if (\is_null($value)) {
+			return null;
+		}
+		else if (\is_string($value)) {
 			return $this->operator->encode($value);
 		}
 		else if (\is_array($value)) {
@@ -122,10 +117,6 @@ class Expression implements Part {
 		else {
 			throw new LogicError('Unrecognized value type: '. \gettype($value));
 		}
-	}
-
-	protected function encode($string) {
-		return $this->operator->encode($string);
 	}
 }
 ?>
