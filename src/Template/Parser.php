@@ -102,10 +102,6 @@ class Parser {
 			$remaining = $rest;
 		}
 
-		if (\strlen($rest)) {
-			throw new LogicError("Extra characters after URI template: '$rest'");
-		}
-
 		return new \Uri\Template(...$parts);
 	}
 
@@ -116,7 +112,9 @@ class Parser {
 
 		$operatorName = $matches['operator'];
 		if (!\array_key_exists($operatorName, $this->operators)) {
-			return [false, $string];
+			// @codeCoverageIgnoreStart
+			throw new LogicError("Missing operator object for '$operatorName'");
+			// @codeCoverageIgnoreEnd
 		}
 		$operator = $this->operators[$operatorName];
 		$variables = \explode(',', $matches['variables']);
