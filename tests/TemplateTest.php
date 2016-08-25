@@ -1,6 +1,8 @@
 <?php
 use PHPUnit\Framework\TestCase;
 
+use \Uri\Template\ValueDispatcher;
+
 class TemplateTest extends TestCase
 {
 	private $variables = [
@@ -26,6 +28,40 @@ class TemplateTest extends TestCase
 		'y' => 768,
 		'who' => 'fred'
 	];
+
+	/**
+	 * @dataProvider valueDispatcherProvider
+	 */
+	public function testValueDispatcher($value, $default, array $handlers, $expected) {
+		$dispatcher = new ValueDispatcher;
+
+		$result = $dispatcher->handle($value, $default, $handlers);
+
+		$this->assertSame($expected, $result);
+	}
+
+	public function valueDispatcherProvider() {
+		$stringValue = '25';
+		$arrayValue = [ 'test' ];
+		$defaultValue = new \stdClass();
+
+		$stringHandler = function () { return 'string'; };
+		$arrayHandler = function () { return 'array'; };
+
+		$allHandlers = [ 'string' => $stringHandler, 'array' => $arrayHandler ];
+		$noStringHandlers = [ 'array' => $arrayHandler ];
+		$noArrayHandlers = [ 'string' => $stringHandler ];
+
+        return [
+	        [ $stringValue, $defaultValue, $allHandlers, 'string' ],
+	        [ $arrayValue, $defaultValue, $allHandlers, 'array' ],
+	        [ $stringValue, $defaultValue, $noStringHandlers, $defaultValue ],
+	        [ $arrayValue, $defaultValue, $noStringHandlers, 'array' ],
+	        [ $stringValue, $defaultValue, $noArrayHandlers, 'string' ],
+	        [ $arrayValue, $defaultValue, $noArrayHandlers, $defaultValue ],
+	        [ null, $defaultValue, $allHandlers, $defaultValue ],
+        ];
+	}
 
 	/**
 	 * @dataProvider templateStringsAndExpansions
