@@ -236,7 +236,6 @@ class Parser {
 	 * A regex string which matches a variable specification.
 	 */
 	protected function getVarSpecRegex() {
-		// TODO Permit level-4 modifier.
 		return "{$this->getVarNameRegex()}(?:{$this->getLevel4ModifierRegex()})?";
 	}
 

@@ -3,6 +3,9 @@ namespace Uri\Template\Variables;
 
 use \Uri\Template\ValueDispatcher;
 
+/**
+ * A `Variable` composed out of independent strategies.
+ */
 class ComposedVariable implements Variable {
 	/**
 	 * @var string
@@ -31,7 +34,7 @@ class ComposedVariable implements Variable {
 	 * @param callable $arrayExpander
 	 * The behaviour for expanding arrays.
 	 *
-	 * @param callable $valuePrefix
+	 * @param callable $valuePrefixer
 	 * The behaviour for trimming expansion results.
 	 */
 	public function __construct($name, callable $arrayExpander, callable $valuePrefixer) {

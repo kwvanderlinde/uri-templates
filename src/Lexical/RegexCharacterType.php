@@ -2,14 +2,12 @@
 namespace Uri\Lexical;
 
 /**
- * @brief
  * A category of characters.
  */
 class RegexCharacterType extends AbstractCharacterType implements CharacterType {
 	private $regex;
 
 	/**
-	 * @brief
 	 * Initializes a `CharType` with a given matcher.
 	 *
 	 * @param string $regex

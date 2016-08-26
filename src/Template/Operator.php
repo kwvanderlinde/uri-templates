@@ -103,7 +103,7 @@ class Operator {
 	 * @param bool $requireFormStyleParameters
 	 * Whether form-style parameters are required for this operator.
 	 *
-	 * @param bool $permitSpecialChars
+	 * @param bool $permitSpecialCharacters
 	 * If `true`, percent-encoded characters and characters in the "reserved"
 	 * set will be expanded without further encoding (this is in addition to the
 	 * usual "unreserved" characters).
