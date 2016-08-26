@@ -3,6 +3,8 @@ namespace Uri\Template\Variables;
 
 /**
  * Handles creation of `Variable` instances.
+ *
+ * @since 1.0.0
  */
 class Factory {
 	/**
@@ -15,6 +17,8 @@ class Factory {
 	 *
 	 * @return Variable
 	 * A variable with the given name and no modifiers.
+	 *
+	 * @since 1.0.0
 	 */
 	public function createSimple($name) {
 		return new ComposedVariable(
@@ -40,6 +44,8 @@ class Factory {
 	 * @return Variable
 	 * A variable with the given name which will explode arrays during
 	 * expansion.
+	 *
+	 * @since 1.0.0
 	 */
 	public function createExploded($name) {
 		return new ComposedVariable(
@@ -72,6 +78,8 @@ class Factory {
 	 * @return Variable
 	 * A variable with the given name which will extract a prefix from the
 	 * expansion.
+	 *
+	 * @since 1.0.0
 	 */
 	public function createPrefixed($name, $prefixCount) {
 		return new ComposedVariable(

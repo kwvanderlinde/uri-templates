@@ -5,6 +5,8 @@ use \Base\Exceptions\LogicError;
 
 /**
  * Represents a collection of named character sets.
+ *
+ * @since 1.0.0
  */
 class CharacterTypes {
 	/**
@@ -30,6 +32,8 @@ class CharacterTypes {
 	 *
 	 * @return bool
 	 * Whether a character set has been defined for `$name`.
+	 *
+	 * @since 1.0.0
 	 */
 	public function __isset($name) {
 		return isset($this->types[$name]);
@@ -43,6 +47,8 @@ class CharacterTypes {
 	 *
 	 * @return CharacterType
 	 * The character set associated with `$name`.
+	 *
+	 * @since 1.0.0
 	 */
 	public function __get($name) {
 		if (!$this->__isset($name)) {
@@ -63,6 +69,8 @@ class CharacterTypes {
 	 *
 	 * @param CharacterType $type
 	 * The character set to associated with `$name`.
+	 *
+	 * @since 1.0.0
 	 */
 	public function __set($name, CharacterType $type) {
 		$this->types[$name] = $type;
@@ -73,6 +81,8 @@ class CharacterTypes {
 	 *
 	 * @param string $name
 	 * The name whose association will be removed.
+	 *
+	 * @since 1.0.0
 	 */
 	public function __unset($name) {
 		unset($this->types[$name]);

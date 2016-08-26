@@ -6,6 +6,8 @@ use \Uri\Template\ValueDispatcher;
 
 /**
  * A `Variable` composed out of independent strategies.
+ *
+ * @since 1.0.0
  */
 class ComposedVariable implements Variable {
 	/**
@@ -46,6 +48,8 @@ class ComposedVariable implements Variable {
 	 *
 	 * @param callable $valuePrefixer
 	 * The behaviour for trimming expansion results.
+	 *
+	 * @since 1.0.0
 	 */
 	public function __construct($name, callable $listExpander, callable $assocExpander, callable $valuePrefixer) {
 		$this->name = $name;
@@ -94,8 +98,29 @@ class ComposedVariable implements Variable {
 		);
 	}
 
-	private function expandArray(array $value, $prefixVar, Operator $operator, callable $expander) {
-		$keyValuePairs = \call_user_func($expander, $value,	$prefixVar);
+	/**
+	 * Handles expansion of list and associative array values.
+	 *
+	 * @param mixed[] $value
+	 * The values to be expanded.
+	 *
+	 * @param string|null $prefixVar
+	 * The variable name to use as a key for unassociated values.
+	 *
+	 * @param Operator $operator
+	 * The operator of the expression, which defines the semantics for value
+	 * expansion.
+	 *
+	 * @param callable $exploder
+	 * Explodes the array if applicable.
+	 *
+	 * @return Generator<string|null>
+	 * A sequence of strings, one for each defined value.
+	 *
+	 * @since 1.0.0
+	 */
+	private function expandArray(array $value, $prefixVar, Operator $operator, callable $exploder) {
+		$keyValuePairs = \call_user_func($exploder, $value,	$prefixVar);
 
 		foreach ($keyValuePairs as list($key, $value)) {
 			yield $operator->combineKeyWithValue(

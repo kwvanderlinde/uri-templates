@@ -4,13 +4,41 @@ namespace Uri\Template;
 use \Uri\Lexical\CharacterTypes;
 use \Uri\Lexical\RegexCharacterType;
 
+/**
+ * Handles creation of a `Parser`.
+ *
+ * @since 1.0.0
+ */
 class ParserFactory {
+	/**
+	 * Creates a new `Parser`.
+	 *
+	 * Although this method could be overridden in subclasses, the methods
+	 * `getCharacterTypes` and `getOperator` are hooks for injecting the
+	 * arguments to `Operator`'s constructor.
+	 *
+	 * @return Parser
+	 * A parser for URI templates.
+	 *
+	 * @since 1.0.0
+	 */
 	public function create() {
 		$characterTypes = $this->getCharacterTypes();
 		$operators = $this->getOperators($characterTypes);
 		return new Parser($operators, $characterTypes);
 	}
 
+	/**
+	 * Gets the operators which should be defined for the parser.
+	 *
+	 * @param CharacterTypes $characterTypes
+	 * The define character sets for the parser.
+	 *
+	 * @return Operator[]
+	 * A mapping from operator names to operator implementations.
+	 *
+	 * @since 1.0.0
+	 */
 	protected function getOperators(CharacterTypes $characterTypes) {
 		return array(
 			'' => new Operator($characterTypes, '', ',', false, false, false),
@@ -24,6 +52,14 @@ class ParserFactory {
 		);
 	}
 
+	/**
+	 * Gets the character sets which are defined for the parser.
+	 *
+	 * @return CharacterTypes
+	 * The defined character sets for the parser.
+	 *
+	 * @since 1.0.0
+	 */
 	protected function getCharacterTypes() {
 		$characterTypes = new CharacterTypes;
 

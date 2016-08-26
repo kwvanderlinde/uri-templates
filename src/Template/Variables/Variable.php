@@ -14,6 +14,8 @@ namespace Uri\Template\Variables;
  *     the values will be extracted as the final expansion result. Prefixing
  *     has no effect on non-string values, and explosion has no effect on string
  *     values.
+ *
+ * @since 1.0.0
  */
 interface Variable {
 	/**
@@ -27,6 +29,8 @@ interface Variable {
 	 *
 	 * @return string
 	 * The expanded variable.
+	 *
+	 * @since 1.0.0
 	 */
 	function expand(array $variables, \Uri\Template\Operator $operator);
 }

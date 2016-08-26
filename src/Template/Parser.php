@@ -41,6 +41,8 @@ class Parser {
 	 *
 	 * @param CharacterTypes $characterTypes
 	 * The defined character sets for URI templates.
+	 *
+	 * @since 1.0.0
 	 */
 	public function __construct(array $operators, CharacterTypes $characterTypes) {
 		$this->characterTypes = $characterTypes;
@@ -56,6 +58,8 @@ class Parser {
 	 * @return \Uri\Template
 	 * An representation of the URI template which is capable of performing
 	 * variable expansion.
+	 *
+	 * @since 1.0.0
 	 */
 	public function parse($templateString) {
 		$parts = array();
@@ -100,6 +104,8 @@ class Parser {
 	 *
 	 * @return ParseResult
 	 * An object holding the parsed expression and the remaining input.
+	 *
+	 * @since 1.0.0
 	 */
 	protected function parseExpression($string) {
 		if (!\preg_match("/^\\{(?<operator>{$this->characterTypes->operator})?(?<variables>{$this->getVarSpecRegex()}(?:,{$this->getVarSpecRegex()})*)\\}(?<rest>\X*)/u", $string, $matches)) {
@@ -150,6 +156,8 @@ class Parser {
 	 *
 	 * @return ParseResult
 	 * An object holding the parsed literal and the remaining input.
+	 *
+	 * @since 1.0.0
 	 */
 	protected function parseLiteral($string) {
 		$result = \preg_match("/^(?<literal>(?:{$this->getLiteralCharRegex()})+)(?<rest>\X*)$/u", $string, $matches);
@@ -171,6 +179,8 @@ class Parser {
 	 *
 	 * @return string
 	 * A regex string which matches a variable specification.
+	 *
+	 * @since 1.0.0
 	 */
 	protected function getVarSpecRegex() {
 		return "{$this->getVarNameRegex()}(?:{$this->getLevel4ModifierRegex()})?";
@@ -181,6 +191,8 @@ class Parser {
 	 *
 	 * @return string
 	 * A regex string which matches a level 4 expression modifier.
+	 *
+	 * @since 1.0.0
 	 */
 	protected function getLevel4ModifierRegex() {
 		return "{$this->getPrefixRegex()}|{$this->getExplodeRegex()}";
@@ -191,6 +203,8 @@ class Parser {
 	 *
 	 * @return string
 	 * A regex string which matches a value prefix component.
+	 *
+	 * @since 1.0.0
 	 */
 	protected function getPrefixRegex() {
 		// Colon followed by positive integer < 10000.
@@ -202,6 +216,8 @@ class Parser {
 	 *
 	 * @return string
 	 * A regex string which matches a value explosion component.
+	 *
+	 * @since 1.0.0
 	 */
 	protected function getExplodeRegex() {
 		return "\\*";
@@ -212,6 +228,8 @@ class Parser {
 	 *
 	 * @return string
 	 * A regex string which matches a variable name.
+	 *
+	 * @since 1.0.0
 	 */
 	protected function getVarNameRegex() {
 		$varChar = $this->getVarCharRegex();
@@ -223,6 +241,8 @@ class Parser {
 	 *
 	 * @return string
 	 * A regex string which matches a variable character.
+	 *
+	 * @since 1.0.0
 	 */
 	protected function getVarCharRegex() {
 		return "(?:[A-Za-z0-9_]|{$this->getPercentEncodedRegex()})";
@@ -233,6 +253,8 @@ class Parser {
 	 *
 	 * @return string
 	 * A regex string which matches a literal character.
+	 *
+	 * @since 1.0.0
 	 */
 	protected function getLiteralCharRegex() {
 		return '[!#$&()*+,\\-.\\/0-9:;=?@A-Z[\\]_a-z~]'
@@ -245,6 +267,8 @@ class Parser {
 	 *
 	 * @return string
 	 * A regex string which matches a percent encoded character.
+	 *
+	 * @since 1.0.0
 	 */
 	protected function getPercentEncodedRegex() {
 		return "%{$this->characterTypes->hexDigit}{2}";

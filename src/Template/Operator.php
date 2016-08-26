@@ -38,6 +38,8 @@ use \Uri\Template\Variables\Variable;
  *
  * See [RFC-6570 §1.5](https://tools.ietf.org/html/rfc6570#section-1.5) for the
  * definitions of various character sets.
+ *
+ * @since 1.0.0
  */
 class Operator {
 	/**
@@ -107,6 +109,8 @@ class Operator {
 	 * If `true`, percent-encoded characters and characters in the "reserved"
 	 * set will be expanded without further encoding (this is in addition to the
 	 * usual "unreserved" characters).
+	 *
+	 * @since 1.0.0
 	 */
 	public function __construct(CharacterTypes $charTypes, $prefix, $separator, $expandNamedParameters, $requireFormStyleParameters, $permitSpecialCharacters) {
 		$this->charTypes = $charTypes;
@@ -127,6 +131,8 @@ class Operator {
 	 * @return string|null
 	 * If a key is to be used for the variable, then that key is returned.
 	 * Otherwise, `null` is returned to indicate that no key should be used.
+	 *
+	 * @since 1.0.0
 	 */
 	public function chooseDefaultKey($name) {
 		if ($this->expandNamedParameters) {
@@ -144,11 +150,13 @@ class Operator {
 	 * Otherwise the result consists of the operator's prefix following by the
 	 * joining of the values, separated by the operator's separator.
 	 *
-	 * @param string[] $parts
+	 * @param string[] $values
 	 * The values produced by expanding each variable of an expression in order.
 	 *
 	 * @return string
 	 * The combination of all the values.
+	 *
+	 * @since 1.0.0
 	 */
 	public function combineValues(array $values) {
 		// Don't use `null` parts (empty parts must be kept, though).
@@ -186,6 +194,8 @@ class Operator {
 	 *
 	 * @return string|null
 	 * The combination of the key and the value, or `null` if there is no value.
+	 *
+	 * @since 1.0.0
 	 */
 	public function combineKeyWithValue($key, $value) {
 		// We assume value to be expanded (and, thus, appropriately encoded already).
@@ -213,6 +223,8 @@ class Operator {
 	 *
 	 * @return string
 	 * The encoded string.
+	 *
+	 * @since 1.0.0
 	 */
 	public function encode($string) {
 		if ($this->permitSpecialCharacters) {
@@ -238,6 +250,8 @@ class Operator {
 	 *
 	 * @return string
 	 * The expansion of the value.
+	 *
+	 * @since 1.0.0
 	 */
 	public function simpleExpandValue($value) {
 		return (new ValueDispatcher($value, null))->handle(
@@ -267,6 +281,20 @@ class Operator {
 		);
 	}
 
+	/**
+	 * Handle expansion of list and associative array values.
+	 *
+	 * @param mixes[] $array
+	 * The array of values to expand.
+	 *
+	 * @param callable $formatter
+	 * A callback which formats a key/value into a string.
+	 *
+	 * @return string
+	 * The result of expanding the array.
+	 *
+	 * @since 1.0.0
+	 */
 	private function simpleExpandArray(array $array, callable $formatter) {
 		$parts = [];
 		foreach ($array as $key => $value) {

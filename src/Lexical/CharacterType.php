@@ -3,6 +3,8 @@ namespace Uri\Lexical;
 
 /**
  * Represents a set of characters.
+ *
+ * @since 1.0.0
  */
 interface CharacterType {
 	/**
@@ -14,6 +16,8 @@ interface CharacterType {
 	 *
 	 * @return bool
 	 * `true` if `$character` belongs to this type. Otherwise `false`.
+	 *
+	 * @since 1.0.0
 	 */
 	function contains($character);
 
@@ -30,6 +34,8 @@ interface CharacterType {
 	 *
 	 * @return string
 	 * A regex fragment which matches any character in the type.
+	 *
+	 * @since 1.0.0
 	 */
 	function getRegexFragment();
 
@@ -41,11 +47,15 @@ interface CharacterType {
 	 *
 	 * @return CharacterType
 	 * The union of `$this` and `$other`.
+	 *
+	 * @since 1.0.0
 	 */
 	function or_(CharacterType $other);
 
 	/**
 	 * An alias of `getRegexFragment`.
+	 *
+	 * @since 1.0.0
 	 */
 	function __toString();
 }

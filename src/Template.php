@@ -5,6 +5,10 @@ use \Uri\Template\Parts\Part as TemplatePart;
 
 /**
  * The parsed representation of a URI template.
+ *
+ * @api
+ *
+ * @since 1.0.0
  */
 class Template {
 	/**
@@ -23,6 +27,10 @@ class Template {
 	 *
 	 * @param TemplatePart ...$parts
 	 * A collection of objects representing the components of a URI template.
+	 *
+	 * @api
+	 *
+	 * @since 1.0.0
 	 */
 	public function __construct(TemplatePart ...$parts) {
 		$this->parts = $parts;
@@ -41,6 +49,10 @@ class Template {
 	 *
 	 * @return string
 	 * The expanded URI.
+	 *
+	 * @api
+	 *
+	 * @since 1.0.0
 	 */
 	public function expand(array $variables) {
 		$expandedParts = \array_map(
