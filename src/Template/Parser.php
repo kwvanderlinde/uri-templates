@@ -10,6 +10,7 @@ use \Uri\Template\Parts\Expression;
 use \Uri\Template\Parts\Literal;
 use \Uri\Template\Parts\Part;
 
+use \Uri\Template\Variables\Factory as VariableFactory;
 use \Uri\Template\Variables\Exploded as ExplodedVariable;
 use \Uri\Template\Variables\Prefixed as PrefixedVariable;
 use \Uri\Template\Variables\Simple as SimpleVariable;
@@ -178,17 +179,18 @@ class Parser {
 		$variables = \explode(',', $matches['variables']);
 
 		// Parse out each of the variables.
+		$variableFactory = new VariableFactory;
 		$variables = \array_map(
-			static function ($variable) {
+			static function ($variable) use ($variableFactory) {
 				if (\preg_match('/(?<varname>\X*)\\*$/u', $variable, $matches)) {
-					return new ExplodedVariable($matches['varname']);
+					return $variableFactory->createExploded($matches['varname']);
 				}
 				else if (\preg_match('/(?<varname>\X*):(?<prefixCount>[0-9]*)/u', $variable, $matches)) {
-					return new PrefixedVariable($matches['varname'], (int)$matches['prefixCount']);
+					return $variableFactory->createPrefixed($matches['varname'], (int)$matches['prefixCount']);
 				}
 				else {
 					// Regular variable
-					return new SimpleVariable($variable);
+					return $variableFactory->createSimple($variable);
 				}
 			},
 			$variables
