@@ -240,42 +240,48 @@ class Operator {
 	 * The expansion of the value.
 	 */
 	public function simpleExpandValue($value) {
-		return (new ValueDispatcher)->handle(
-			$value,
-			null,
+		return (new ValueDispatcher($value, null))->handle(
 			[
 				'string' => function ($value) {
 					return $this->encode($value);
 				},
 
-				'array' => function ($array, $isSequential) {
-					$format = (
-						$isSequential
-						? function ($key, $value) {
+				'list' => function (array $array) {
+					return $this->simpleExpandArray(
+						$array,
+						function ($key, $value) {
 							return $this->encode($value);
 						}
-						: function ($key, $value) {
+					);
+				},
+
+				'assoc' => function (array $array) {
+					return $this->simpleExpandArray(
+						$array,
+						function ($key, $value) {
 							return $this->encode($key).','.$this->encode($value);
 						}
 					);
-
-					$parts = [];
-					foreach ($array as $key => $value) {
-						if (\is_null($value)) {
-							continue;
-						}
-
-						$parts[] = $format($key, $value);
-					}
-
-					if (empty($parts)) {
-						return null;
-					}
-
-					return \implode(',', $parts);
 				}
 			]
 		);
+	}
+
+	private function simpleExpandArray(array $array, callable $formatter) {
+		$parts = [];
+		foreach ($array as $key => $value) {
+			if (\is_null($value)) {
+				continue;
+			}
+
+			$parts[] = \call_user_func($formatter, $key, $value);
+		}
+
+		if (empty($parts)) {
+			return null;
+		}
+
+		return \implode(',', $parts);
 	}
 }
 ?>

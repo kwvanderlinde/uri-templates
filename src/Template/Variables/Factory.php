@@ -1,8 +1,6 @@
 <?php
 namespace Uri\Template\Variables;
 
-use \Uri\Template\Operator;
-
 /**
  * Handles creation of `Variable` instances.
  */
@@ -21,7 +19,10 @@ class Factory {
 	public function createSimple($name) {
 		return new ComposedVariable(
 			$name,
-			static function ($prefixVar, $value, Operator $operator) {
+			static function ($value, $prefixVar) {
+				yield [ $prefixVar, $value ];
+			},
+			static function ($value, $prefixVar) {
 				yield [ $prefixVar, $value ];
 			},
 			static function ($value) {
@@ -43,14 +44,14 @@ class Factory {
 	public function createExploded($name) {
 		return new ComposedVariable(
 			$name,
-			static function ($prefixVar, $value, Operator $operator) {
-				// Explode the composite value.
-				$getKey = \Uri\isSequentialArray($value)
-					? static function ($key) use ($prefixVar) { return $prefixVar; }
-					: static function ($key) { return $key; };
-
+			static function ($value, $prefixVar) {
+				foreach ($value as $v) {
+					yield [ $prefixVar, $v ];
+				}
+			},
+			static function ($value) {
 				foreach ($value as $key => $v) {
-					yield [ $getKey($key), $v ];
+					yield [ $key, $v ];
 				}
 			},
 			static function ($value) {
@@ -75,7 +76,10 @@ class Factory {
 	public function createPrefixed($name, $prefixCount) {
 		return new ComposedVariable(
 			$name,
-			static function ($prefixVar, $value, Operator $operator) {
+			static function ($value, $prefixVar) {
+				yield [ $prefixVar, $value ];
+			},
+			static function ($value, $prefixVar) {
 				yield [ $prefixVar, $value ];
 			},
 			static function ($value) use ($prefixCount) {

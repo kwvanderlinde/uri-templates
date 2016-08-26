@@ -62,32 +62,45 @@ class TemplateTest extends TestCase
 	 * @dataProvider valueDispatcherProvider
 	 */
 	public function testValueDispatcher($value, $default, array $handlers, $expected) {
-		$dispatcher = new ValueDispatcher;
+		$dispatcher = new ValueDispatcher($value, $default);
 
-		$result = $dispatcher->handle($value, $default, $handlers);
+		$result = $dispatcher->handle($handlers);
 
 		$this->assertSame($expected, $result);
 	}
 
 	public function valueDispatcherProvider() {
 		$stringValue = '25';
-		$arrayValue = [ 'test' ];
+		$listValue = [ 'test' ];
+		$assocValue = [ 'a' => 'test' ];
 		$defaultValue = new \stdClass();
 
 		$stringHandler = function () { return 'string'; };
-		$arrayHandler = function () { return 'array'; };
+		$listHandler = function () { return 'list'; };
+		$assocHandler = function () { return 'assoc'; };
 
-		$allHandlers = [ 'string' => $stringHandler, 'array' => $arrayHandler ];
-		$noStringHandlers = [ 'array' => $arrayHandler ];
-		$noArrayHandlers = [ 'string' => $stringHandler ];
+		$allHandlers = [
+			'string' => $stringHandler,
+			'list' => $listHandler,
+			'assoc' => $assocHandler
+		];
+		$noStringHandlers = [ 'list' => $listHandler, 'assoc' => $assocHandler ];
+		$noListHandlers = [ 'string' => $stringHandler, 'assoc' => $assocHandler ];
+		$noAssocHandlers = [ 'string' => $stringHandler, 'list' => $listHandler ];
 
         return [
 	        [ $stringValue, $defaultValue, $allHandlers, 'string' ],
-	        [ $arrayValue, $defaultValue, $allHandlers, 'array' ],
+	        [ $listValue, $defaultValue, $allHandlers, 'list' ],
+	        [ $assocValue, $defaultValue, $allHandlers, 'assoc' ],
 	        [ $stringValue, $defaultValue, $noStringHandlers, $defaultValue ],
-	        [ $arrayValue, $defaultValue, $noStringHandlers, 'array' ],
-	        [ $stringValue, $defaultValue, $noArrayHandlers, 'string' ],
-	        [ $arrayValue, $defaultValue, $noArrayHandlers, $defaultValue ],
+	        [ $listValue, $defaultValue, $noStringHandlers, 'list' ],
+	        [ $assocValue, $defaultValue, $noStringHandlers, 'assoc' ],
+	        [ $stringValue, $defaultValue, $noListHandlers, 'string' ],
+	        [ $listValue, $defaultValue, $noListHandlers, $defaultValue ],
+	        [ $assocValue, $defaultValue, $noListHandlers, 'assoc' ],
+	        [ $stringValue, $defaultValue, $noAssocHandlers, 'string' ],
+	        [ $listValue, $defaultValue, $noAssocHandlers, 'list' ],
+	        [ $assocValue, $defaultValue, $noAssocHandlers, $defaultValue ],
 	        [ null, $defaultValue, $allHandlers, $defaultValue ],
         ];
 	}

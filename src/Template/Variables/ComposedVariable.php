@@ -1,6 +1,7 @@
 <?php
 namespace Uri\Template\Variables;
 
+use \Uri\Template\Operator;
 use \Uri\Template\ValueDispatcher;
 
 /**
@@ -15,9 +16,15 @@ class ComposedVariable implements Variable {
 
 	/**
 	 * @var callable
-	 * Defines the behaviour for expanding arrays.
+	 * Defines the behaviour for expanding lists.
 	 */
-	private $arrayExpander;
+	private $listExpander;
+
+	/**
+	 * @var callable
+	 * Defines the behaviour for expanding associative arrays.
+	 */
+	private $assocExpander;
 
 	/**
 	 * @var callable
@@ -31,27 +38,29 @@ class ComposedVariable implements Variable {
 	 * @param string $name
 	 * The name of the variable.
 	 *
-	 * @param callable $arrayExpander
-	 * The behaviour for expanding arrays.
+	 * @param callable $listExpander
+	 * The behaviour for expanding lists.
+	 *
+	 * @param callable $assocExpander
+	 * The behaviour for expanding associative arrays..
 	 *
 	 * @param callable $valuePrefixer
 	 * The behaviour for trimming expansion results.
 	 */
-	public function __construct($name, callable $arrayExpander, callable $valuePrefixer) {
+	public function __construct($name, callable $listExpander, callable $assocExpander, callable $valuePrefixer) {
 		$this->name = $name;
-		$this->arrayExpander = $arrayExpander;
+		$this->listExpander = $listExpander;
+		$this->assocExpander = $assocExpander;
 		$this->valuePrefixer = $valuePrefixer;
 	}
 
 	/**
 	 * @inheritDocs
 	 */
-	public function expand(array $variables, \Uri\Template\Operator $operator) {
+	public function expand(array $variables, Operator $operator) {
 		$prefixVar = $operator->chooseDefaultKey($this->name);
 
-		return (new ValueDispatcher)->handle(
-			@$variables[$this->name],
-			new \EmptyIterator,
+		return (new ValueDispatcher(@$variables[$this->name], new \EmptyIterator))->handle(
 			[
 				'string' => function ($value) use ($prefixVar, $operator) {
 					// Exploded strings are the same as non-exploded strings.
@@ -64,23 +73,40 @@ class ComposedVariable implements Variable {
 					);
 				},
 
-				'array' => function ($value) use ($prefixVar, $operator) {
-					$keyValuePairs = \call_user_func(
-						$this->arrayExpander,
-						$prefixVar,
+				'list' => function (array $value) use ($prefixVar, $operator) {
+					return $this->expandArray(
 						$value,
-						$operator
+						$prefixVar,
+						$operator,
+						$this->listExpander
 					);
+				},
 
-					foreach ($keyValuePairs as list($key, $value)) {
-						yield $operator->combineKeyWithValue(
-							$key,
-							$operator->simpleExpandValue($value)
-						);
-					}
+				'assoc' => function (array $value) use ($prefixVar, $operator) {
+					return $this->expandArray(
+						$value,
+						$prefixVar,
+						$operator,
+						$this->assocExpander
+					);
 				}
 			]
 		);
+	}
+
+	private function expandArray(array $value, $prefixVar, Operator $operator, callable $expander) {
+		$keyValuePairs = \call_user_func(
+			$expander,
+			$value,
+			$prefixVar
+		);
+
+		foreach ($keyValuePairs as list($key, $value)) {
+			yield $operator->combineKeyWithValue(
+				$key,
+				$operator->simpleExpandValue($value)
+			);
+		}
 	}
 }
 ?>

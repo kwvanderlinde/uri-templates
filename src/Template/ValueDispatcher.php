@@ -11,56 +11,72 @@ namespace Uri\Template;
  */
 class ValueDispatcher {
 	/**
-	 * Dispatches on a value's type.
+	 * @var mixed
+	 * The value to dispatch on.
+	 */
+	private $value;
+
+	/**
+	 * @var mixed
+	 * The value to use if `$this->value` is `null`, or no handlers are present
+	 * for the value.
+	 */
+	private $defaultResult;
+
+	/**
+	 * Initializes a `ValueDispatcher`.
 	 *
-	 * @param mixed value
+	 * @param mixed $value
 	 * The value to dispatch on.
 	 *
-	 * @param mixed defaultResult
+	 * @param mixed $defaultResult
 	 * If `$value` is `null`, or no handler is available for `$value`, then this
 	 * is the value that will be returned.
+	 */
+	public function __construct($value, $defaultResult) {
+		$this->value = $value;
+		$this->defaultResult = $defaultResult;
+	}
+
+	/**
+	 * Dispatches on a value's type.
 	 *
 	 * @param callable[] $handlers
 	 * An array of callbacks. The keys are the types which each handler can
-	 * handle. The first parameter to each handler is the `$value`, converted to
+	 * handle. The first parameter to each handler is the value, converted to
 	 * its handleable type. For arrays, a second parameter is provided which is
 	 * `true` if the array is sequential, or false otherwise.
 	 *
 	 * @return mixed
-	 * The result of applying a handler to `$value`, or `$defaultValue` if
-	 * `$value` is `null` or no appropriate handler is available.
-	 *
-	 * @todo
-	 * Make `$value` into a property of `$this` rather than a parameter of this
-	 * method.
-	 *
-	 * @todo
-	 * Remove the second parameter to array handlers. Instead, we ought to
-	 * provide two different keys, `list` and `assoc` for sequential and
-	 * non-sequential arrays, respectively. We could keep the key `array` as an
-	 * alternative to specifying the `list` and `assoc` handlers separately, in
-	 * case the logic for the two is quite similar.
+	 * The result of applying a handler to the value, or the default value if
+	 * the value is `null` or no appropriate handler is available.
 	 */
-	public function handle($value, $defaultResult, array $handlers) {
-		if (\is_null($value)) {
-			return $defaultResult;
+	public function handle(array $handlers) {
+		if (\is_null($this->value)) {
+			return $this->defaultResult;
 		}
 
-		if (\is_array($value)) {
-			$handlerKey = 'array';
-			$args = [ $value, \Uri\isSequentialArray($value) ];
+		if (\is_array($this->value)) {
+			if (\Uri\isSequentialArray($this->value)) {
+				$handlerKey = 'list';
+			}
+			else {
+				$handlerKey = 'assoc';
+			}
+
+			$value = $this->value;
 		}
 		else {
 			$handlerKey = 'string';
-			$args = [ (string)$value ];
+			$value = (string)$this->value;
 		}
 
 		$handler = @$handlers[$handlerKey];
 		if (\is_null($handler)) {
-			return $defaultResult;
+			return $this->defaultResult;
 		}
 
-		return \call_user_func_array($handler, $args);
+		return \call_user_func($handler, $value);
 	}
 }
 ?>
