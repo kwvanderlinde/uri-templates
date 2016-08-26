@@ -93,13 +93,13 @@ class TemplateTest extends TestCase
 	}
 
 	/**
-	 * @dataProvider operatorGetDefaultKeyProvider
+	 * @dataProvider operatorChooseDefaultKeyProvider
 	 */
-	public function testOperatorGetDefaultKey(Operator $operator, $varName, $expected) {
-		$this->assertEquals($expected, $operator->getDefaultKey($varName));
+	public function testOperatorChooseDefaultKey(Operator $operator, $varName, $expected) {
+		$this->assertEquals($expected, $operator->chooseDefaultKey($varName));
 	}
 
-	public function operatorGetDefaultKeyProvider() {
+	public function operatorChooseDefaultKeyProvider() {
 		$varName = 'my_var';
 
 		return [
@@ -115,13 +115,13 @@ class TemplateTest extends TestCase
 	}
 
 	/**
-	 * @dataProvider operatorCombineValueProvider
+	 * @dataProvider operatorCombineValuesProvider
 	 */
-	public function testOperatorCombineValue(Operator $operator, $parts, $expected) {
-		$this->assertEquals($expected, $operator->combineValue($parts));
+	public function testOperatorCombineValues(Operator $operator, $parts, $expected) {
+		$this->assertEquals($expected, $operator->combineValues($parts));
 	}
 
-	public function operatorCombineValueProvider() {
+	public function operatorCombineValuesProvider() {
 		return [
 			[ $this->operators[''], ['', 'b', null, 'c'], ',b,c' ],
 			[ $this->operators['+'], ['', 'b', null, 'c'], ',b,c' ],

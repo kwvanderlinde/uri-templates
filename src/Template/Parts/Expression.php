@@ -52,7 +52,7 @@ class Expression implements Part {
 			);
 		}
 
-		return $this->operator->combineValue($parts);
+		return $this->operator->combineValues($parts);
 	}
 }
 ?>

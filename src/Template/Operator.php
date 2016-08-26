@@ -149,24 +149,21 @@ class Operator {
 	 *
 	 * @return string
 	 * The combination of all the values.
-	 *
-	 * @todo
-	 * Pluralize this to `combineValues`, and renamed `$parts` to `$values`.
 	 */
-	public function combineValue(array $parts) {
+	public function combineValues(array $values) {
 		// Don't use `null` parts (empty parts must be kept, though).
-		$parts = \array_filter(
-			$parts,
-			static function ($part) {
-				return !\is_null($part);
+		$values = \array_filter(
+			$values,
+			static function ($value) {
+				return !\is_null($value);
 			}
 		);
 
-		if (empty($parts)) {
+		if (empty($values)) {
 			return '';
 		}
 
-		return $this->prefix.\implode($this->separator, $parts);
+		return $this->prefix.\implode($this->separator, $values);
 	}
 
 	/**
