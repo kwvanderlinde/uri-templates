@@ -93,22 +93,25 @@ class TemplateTest extends TestCase
 	}
 
 	/**
-	 * @dataProvider operatorExpandsNamedParametersProvider
+	 * @dataProvider operatorGetDefaultKeyProvider
 	 */
-	public function testOperatorExpandsNamedParameters(Operator $operator, $expected) {
-		$this->assertEquals($expected, $operator->expandNamedParameters());
+	public function testOperatorGetDefaultKey(Operator $operator, \Uri\Template\Variables\Variable $var, $expected) {
+		$this->assertEquals($expected, $operator->getDefaultKey($var));
 	}
 
-	public function operatorExpandsNamedParametersProvider() {
+	public function operatorGetDefaultKeyProvider() {
+		$varName = 'my_var';
+		$var = new \Uri\Template\Variables\Simple($varName);
+
 		return [
-			[ $this->operators[''], false ],
-			[ $this->operators['+'], false ],
-			[ $this->operators['#'], false ],
-			[ $this->operators['.'], false ],
-			[ $this->operators['/'], false ],
-			[ $this->operators[';'], true ],
-			[ $this->operators['?'], true ],
-			[ $this->operators['&'], true ],
+			[ $this->operators[''], $var, false ],
+			[ $this->operators['+'], $var, null ],
+			[ $this->operators['#'], $var, null ],
+			[ $this->operators['.'], $var, null ],
+			[ $this->operators['/'], $var, null ],
+			[ $this->operators[';'], $var, $varName ],
+			[ $this->operators['?'], $var, $varName ],
+			[ $this->operators['&'], $var, $varName ],
 		];
 	}
 
