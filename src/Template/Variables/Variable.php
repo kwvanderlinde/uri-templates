@@ -17,40 +17,17 @@ namespace Uri\Template\Variables;
  */
 interface Variable {
 	/**
-	 * Gets the name of the variable.
+	 * Expands a variable with a value.
+	 *
+	 * @param array $variables
+	 * A mapping from variable names to values.
+	 *
+	 * @param Operator $operator
+	 * The operator which defines the expansion semantics.
 	 *
 	 * @return string
-	 * The name of the variable.
+	 * The expanded variable.
 	 */
-	function getName();
-
-	/**
-	 * Get the number of characters to take from the front of a value.
-	 *
-	 * @return int
-	 * The number of characters to take from the front of an expanded value
-	 * string, or `0` if no prefix extraction should occur.
-	 */
-	function getPrefixCount();
-
-	/**
-	 * Gets whether to explode values.
-	 *
-	 * @return bool
-	 * Whether to explode values.
-	 */
-	function isExploded();
-
-	/**
-	 * Extracts a prefix from a value.
-	 *
-	 * @param string $value
-	 * The expanded value of the variable.
-	 *
-	 * @return string
-	 * A prefix of `$value` containing the necessary number of characters,
-	 * accounting for percent encoded characters.
-	 */
-	function getValuePrefix($value);
+	function expand(array $variables, \Uri\Template\Operator $operator);
 }
 ?>

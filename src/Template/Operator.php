@@ -121,16 +121,16 @@ class Operator {
 	 * Determines which key to associate with the variable's value during
 	 * expansion.
 	 *
-	 * @param Variable $var
-	 * The variable which will be expanded.
+	 * @param string $name
+	 * The variable name which will be expanded.
 	 *
 	 * @return string|null
 	 * If a key is to be used for the variable, then that key is returned.
 	 * Otherwise, `null` is returned to indicate that no key should be used.
 	 */
-	public function getDefaultKey(Variable $var) {
+	public function chooseDefaultKey($name) {
 		if ($this->expandNamedParameters) {
-			return $var->getName();
+			return $name;
 		}
 
 		return null;
@@ -182,17 +182,20 @@ class Operator {
 	 * @param string|null $key
 	 * The key to render, or `null` if no key should be rendered.
 	 *
-	 * @param string $value
+	 * @param string|null $value
 	 * The value to associate with the key. It is assumed that this is the
 	 * expansion of an expression, so it doesn't not require further percent
-	 * encoding.
+	 * encoding. If `null`, the result will be `null`.
 	 *
-	 * @return string
-	 * The combination of the key and the value.
+	 * @return string|null
+	 * The combination of the key and the value, or `null` if there is no value.
 	 */
 	public function combineKeyWithValue($key, $value) {
 		// We assume value to be expanded (and, thus, appropriately encoded already).
-		if (\is_null($key)) {
+		if (\is_null($value)) {
+			return null;
+		}
+		else if (\is_null($key)) {
 			return $value;
 		}
 		else if (\strlen($value) || $this->requireFormStyleParameters) {
@@ -225,6 +228,57 @@ class Operator {
 		}
 
 		return \Uri\percentEncode($string, $keepPercentage, ...$charTypes);
+	}
+
+	/**
+	 * Expands a value in a non-exploded context.
+	 *
+	 * In a non-exploded context, lists and associtive arrays are treated as a
+	 * whole and rendered into a string.
+	 *
+	 * @param mixed $value
+	 * The value to expand in a non-exploded context.
+	 *
+	 * @return string
+	 * The expansion of the value.
+	 */
+	public function simpleExpandValue($value) {
+		return (new ValueDispatcher)->handle(
+			$value,
+			null,
+			[
+				'string' => function ($value) {
+					return $this->encode($value);
+				},
+
+				'array' => function ($array, $isSequential) {
+					$format = (
+						$isSequential
+						? function ($key, $value) {
+							return $this->encode($value);
+						}
+						: function ($key, $value) {
+							return $this->encode($key).','.$this->encode($value);
+						}
+					);
+
+					$parts = [];
+					foreach ($array as $key => $value) {
+						if (\is_null($value)) {
+							continue;
+						}
+
+						$parts[] = $format($key, $value);
+					}
+
+					if (empty($parts)) {
+						return null;
+					}
+
+					return \implode(',', $parts);
+				}
+			]
+		);
 	}
 }
 ?>
