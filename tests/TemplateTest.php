@@ -211,7 +211,7 @@ class TemplateTest extends TestCase
 	 */
 	public function testTemplate($templateString, $expected)
 	{
-		$parser = new \Uri\Template\Parser();
+		$parser = (new \Uri\Template\ParserFactory)->create();
 		$template = $parser->parse($templateString);
 		$result = $template->expand($this->variables);
 		$this->assertEquals($expected, $result);
@@ -225,7 +225,7 @@ class TemplateTest extends TestCase
 			$this->expectException($expectedException);
 		}
 
-		$parser = new \Uri\Template\Parser();
+		$parser = (new \Uri\Template\ParserFactory)->create();
 		$template = $parser->parse($templateString);
 	}
 
