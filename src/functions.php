@@ -7,6 +7,9 @@ use \Uri\Lexical\UnionCharacterType;
 /**
  * Checks whether an array is a sequential numeric array.
  *
+ * An array is considered sequential if it is empty or its keys are consecutive
+ * integers running from `0` to `count($array) - 1` in that order.
+ *
  * @param array $array
  * The array to check.
  *
@@ -20,17 +23,27 @@ function isSequentialArray(array $array) {
 /**
  * Percent encodes a string.
  *
+ * Rather the percent encoding every character in the string, we only percent
+ * encode character which are not considered "safe". The set of safe characters
+ * is determined by the `$safeTypes` parameter.
+ *
+ * If any characters are already percent encoded, they may be kept as-is by
+ * setting the `$keepEncoded` parameter to `true`. So, for instance, if a
+ * percent-encoded space (`'%20'`) is encoutered, setting `$keepEncoded` to
+ * `true` will cause the result to have `'%20'`, rather than, say, `'%2520'`.
+ *
  * @param string $string
- * The string to encode.
+ * The string which will be percent encoded.
  *
  * @param bool $keepEncoded
- * If `true`, existing percent encoded characters will be kept as is. Otherwise,
- * any "%" characters will be percent encoded to %25 (unless it belongs to one
- * of `$safeTypes`).
+ * Whether or not to keep percent encoded characters as-is.
  *
- * @param CharacterType $safeTypes
+ * @param \Uri\Lexical\CharacterType ...$safeTypes
  * The set of character types which are considered "safe" for the expansion.
  * These characters will not be percent encoded.
+ *
+ * @return string
+ * A percent-encoded string equivalent to `$string`.
  */
 function percentEncode($string, $keepEncoded, CharacterType... $safeTypes) {
 	// Combine the allowed types.

@@ -20,6 +20,9 @@ class RegexCharacterType extends AbstractCharacterType implements CharacterType 
 		$this->regex = $regex;
 	}
 
+	/**
+	 * @inheritDocs
+	 */
 	public function getRegexFragment() {
 		return $this->regex;
 	}

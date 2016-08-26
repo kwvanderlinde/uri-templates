@@ -7,17 +7,53 @@ use \Uri\Template\Variables\Variable;
 use \Uri\Template\Operator;
 use \Uri\Template\ValueDispatcher;
 
+/**
+ * Represents an expression part of a URI template.
+ *
+ * An expression allows injecting values into a URI template. The exact rules
+ * for this injection depends on the expression's operator and variable
+ * specifications.
+ */
 class Expression implements Part {
+	/**
+	 * @var CharacterTypes
+	 * The defined character sets.
+	 */
 	private $charTypes;
+
+	/**
+	 * @var Operator
+	 * The operator of the expression.
+	 */
 	private $operator;
+
+	/**
+	 * @var array<Variable> $variables
+	 * The variables which the expression will expand.
+	 */
 	private $variables;
 
+	/**
+	 * Initializes an `Expression` instance.
+	 *
+	 * @param CharacterTypes $charTypes
+	 * The defined character sets.
+	 *
+	 * @param Operator $operator
+	 * The operator defining the expression's semantics.
+	 *
+	 * @param array<Variable> $variables
+	 * The variables which will be expanded by the expression.
+	 */
 	public function __construct(CharacterTypes $charTypes, Operator $operator, array $variables) {
 		$this->charTypes = $charTypes;
 		$this->operator = $operator;
 		$this->variables = $variables;
 	}
 
+	/**
+	 * @inheritDoc
+	 */
 	public function expand(array $variables) {
 		$parts = array();
 		foreach ($this->variables as $var) {
@@ -31,6 +67,18 @@ class Expression implements Part {
 		return $this->operator->combineValue($parts);
 	}
 
+	/**
+	 * Expands a variable with a value.
+	 *
+	 * @param Variable $var
+	 * The variable to expand.
+	 *
+	 * @param mixed $value
+	 * The value to expand.
+	 *
+	 * @return string
+	 * The expanded variable.
+	 */
 	protected function expandValue(Variable $var, $value) {
 		$prefixVar = $this->operator->getDefaultKey($var);
 
@@ -70,6 +118,18 @@ class Expression implements Part {
 		);
 	}
 
+	/**
+	 * Expands a key/value pair.
+	 *
+	 * @param string|null $key
+	 * The key to used when expanding the pair. If `null`, no key will be used.
+	 *
+	 * @param string $value
+	 * The expanded value to combine with the key.
+	 *
+	 * @return string
+	 * The comination of the key and value, as defined by the current operator.
+	 */
 	protected function expandKeyValueImpl($key = null, $value) {
 		/* Any explosions have already taken place, so we don't have to exploded
 		 *`$value` here.
@@ -81,6 +141,18 @@ class Expression implements Part {
 		return $this->operator->combineKeyWithValue($key, $value);
 	}
 
+	/**
+	 * Expands a value in a non-exploded context.
+	 *
+	 * In a non-exploded context, lists and associtive arrays are treated as a
+	 * whole and rendered into a string.
+	 *
+	 * @param mixed $value
+	 * The value to expand in a non-exploded context.
+	 *
+	 * @return string
+	 * The expansion of the value.
+	 */
 	protected function expandNotExplodedValue($value) {
 		return (new ValueDispatcher)->handle(
 			$value,

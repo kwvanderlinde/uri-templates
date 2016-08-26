@@ -1,6 +1,9 @@
 <?php
 namespace Uri\Lexical;
 
+/**
+ * Represents a set of characters.
+ */
 interface CharacterType {
 	/**
 	 * Tests whether a character belongs to this character type.
@@ -30,6 +33,15 @@ interface CharacterType {
 	 */
 	function getRegexFragment();
 
+	/**
+	 * Forms the union of two character sets.
+	 *
+	 * @param CharacterType $other
+	 * The other character set to use.
+	 *
+	 * @return CharacterType
+	 * The union of `$this` and `$other`.
+	 */
 	function or_(CharacterType $other);
 
 	/**
