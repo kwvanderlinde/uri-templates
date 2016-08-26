@@ -44,7 +44,7 @@ class ComposedVariable implements Variable {
 	 * @inheritDocs
 	 */
 	public function expand(array $variables, \Uri\Template\Operator $operator) {
-		$prefixVar = $operator->getDefaultKey($this->name);
+		$prefixVar = $operator->chooseDefaultKey($this->name);
 
 		return (new ValueDispatcher)->handle(
 			@$variables[$this->name],

@@ -196,7 +196,7 @@ class Parser {
 			$variables
 		);
 
-		$expression = new Expression($this->characterTypes, $operator, $variables);
+		$expression = new Expression($operator, $variables);
 
 		return [$expression, $matches['rest']];
 	}

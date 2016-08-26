@@ -128,7 +128,7 @@ class Operator {
 	 * If a key is to be used for the variable, then that key is returned.
 	 * Otherwise, `null` is returned to indicate that no key should be used.
 	 */
-	public function getDefaultKey($name) {
+	public function chooseDefaultKey($name) {
 		if ($this->expandNamedParameters) {
 			return $name;
 		}

@@ -16,12 +16,6 @@ use \Uri\Template\ValueDispatcher;
  */
 class Expression implements Part {
 	/**
-	 * @var CharacterTypes
-	 * The defined character sets.
-	 */
-	private $charTypes;
-
-	/**
 	 * @var Operator
 	 * The operator of the expression.
 	 */
@@ -45,8 +39,7 @@ class Expression implements Part {
 	 * @param array<Variable> $variables
 	 * The variables which will be expanded by the expression.
 	 */
-	public function __construct(CharacterTypes $charTypes, Operator $operator, array $variables) {
-		$this->charTypes = $charTypes;
+	public function __construct(Operator $operator, array $variables) {
 		$this->operator = $operator;
 		$this->variables = $variables;
 	}
