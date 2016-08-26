@@ -118,28 +118,31 @@ class Parser {
 
 		$remaining = $templateString;
 
-		$rest = '';
 		while (\strlen($remaining)) {
-			// Either match a literal or an expression,
-			if ($remaining[0] === '{') {
-				// Expression.
-				list($expression, $rest) = $this->parseExpression($remaining);
-				if ($expression === false) {
-					throw new LogicError('Expected expression or literal at '.(\strlen($templateString) - \strlen($rest))." in '$templateString'");
+			try {
+				// Either match a literal or an expression,
+				if ($remaining[0] === '{') {
+					$parser = [ $this, 'parseExpression' ];
 				}
-				$parts[] = $expression;
-			}
-			else {
-				// Literal
-				list($literal, $rest) = $this->parseLiteral($remaining);
-				if ($literal === false) {
-					throw new LogicError('Expected expression or literal at '.(\strlen($templateString) - \strlen($rest))." in '$templateString'");
+				else {
+					$parser = [ $this, 'parseLiteral' ];
 				}
 
-				$parts[] = $literal;
-			}
+				$result = \call_user_func($parser, $remaining);
 
-			$remaining = $rest;
+				$newRemaining = $result->getRemainingInput();
+				if (\strlen($newRemaining) === \strlen($remaining)) {
+					// @codeCoverageIgnoreStart
+					throw new LogicError('Parser matched the empty string. This is not supposed to happen as it results in an infinite loop.');
+					// @codeCoverageIgnoreEnd
+				}
+				$remaining = $newRemaining;
+
+				$parts[] = $result->getPayload();
+			}
+			catch (ParseFailedException $ex) {
+				throw new LogicError('Expected expression or literal at '.(\strlen($templateString) - \strlen($remaining))." in '$templateString'");
+			}
 		}
 
 		return new \Uri\Template(...$parts);
@@ -151,22 +154,15 @@ class Parser {
 	 * @param string $string
 	 * The string from which to parse an expression.
 	 *
-	 * @return array
-	 * An array of two values. The first value is the parsed
-	 * `\Uri\Template\Parts\Part` instance which represents the expression, or
-	 * `false` if the parsing failed. The second value is the string remaining
-	 * after parsing, or just `$string` in case of failure.
-	 *
-	 * @todo
-	 * Define a contingency to throw on parse failures.
-	 *
-	 * @todo
-	 * Define a type for parse results which encapsulate a parsed value with a
-	 * remainder string.
+	 * @return ParseResult
+	 * An object holding the parsed expression and the remaining input.
 	 */
 	protected function parseExpression($string) {
 		if (!\preg_match("/^\\{(?<operator>{$this->characterTypes->operator})?(?<variables>{$this->getVarSpecRegex()}(?:,{$this->getVarSpecRegex()})*)\\}(?<rest>\X*)/u", $string, $matches)) {
-			return [false, $string];
+			throw new ParseFailedException(
+				'Expected expression',
+				$string
+			);
 		}
 
 		$operatorName = $matches['operator'];
@@ -196,9 +192,10 @@ class Parser {
 			$variables
 		);
 
-		$expression = new Expression($operator, $variables);
-
-		return [$expression, $matches['rest']];
+		return new ParseResult(
+			new Expression($operator, $variables),
+			$matches['rest']
+		);
 	}
 
 	/**
@@ -207,26 +204,22 @@ class Parser {
 	 * @param string $string
 	 * The string from which to parse a literal.
 	 *
-	 * @return array
-	 * An array of two values. The first value is the parsed
-	 * `\Uri\Template\Parts\Part` instance which represents the expression, or
-	 * `false` if the parsing failed. The second value is the string remaining
-	 * after parsing, or just `$string` in case of failure.
-	 *
-	 * @todo
-	 * Define a contingency to throw on parse failures.
-	 *
-	 * @todo
-	 * Define a type for parse results which encapsulate a parsed value with a
-	 * remainder string.
+	 * @return ParseResult
+	 * An object holding the parsed literal and the remaining input.
 	 */
 	protected function parseLiteral($string) {
-		$result = \preg_match("/^(?<literal>(?:{$this->getLiteralCharRegex()})*)(?<rest>\X*)$/u", $string, $matches);
+		$result = \preg_match("/^(?<literal>(?:{$this->getLiteralCharRegex()})+)(?<rest>\X*)$/u", $string, $matches);
 		if (!$result || !\strlen($matches['literal'])) {
-			return [false, $string];
+			throw new ParseFailedException(
+				'Expected literal',
+				$string
+			);
 		}
 
-		return [new Literal($this->characterTypes, $matches['literal']), $matches['rest']];
+		return new ParseResult(
+			new Literal($this->characterTypes, $matches['literal']),
+			$matches['rest']
+		);
 	}
 
 	/**

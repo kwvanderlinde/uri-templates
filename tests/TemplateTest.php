@@ -4,6 +4,7 @@ use PHPUnit\Framework\TestCase;
 use Uri\Lexical\CharacterTypes;
 use Uri\Lexical\RegexCharacterType;
 use \Uri\Template\Operator;
+use \Uri\Template\ParseFailedException;
 use \Uri\Template\ValueDispatcher;
 
 class TemplateTest extends TestCase
@@ -438,6 +439,15 @@ class TemplateTest extends TestCase
 			[ '{keys_some_undef:5}', 'semi,%3B,comma,%2C' ],
 			[ '{keys_all_undef:5}', '' ],
 		];
+	}
+
+	public function testParseFailedException() {
+		$message = 'Expected something else';
+		$input = 'This is a string';
+		$ex = new ParseFailedException($message, $input);
+
+		$this->assertSame($message, $ex->getMessage());
+		$this->assertSame($input, $ex->getString());
 	}
 }
 ?>

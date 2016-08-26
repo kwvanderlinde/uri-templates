@@ -95,11 +95,7 @@ class ComposedVariable implements Variable {
 	}
 
 	private function expandArray(array $value, $prefixVar, Operator $operator, callable $expander) {
-		$keyValuePairs = \call_user_func(
-			$expander,
-			$value,
-			$prefixVar
-		);
+		$keyValuePairs = \call_user_func($expander, $value,	$prefixVar);
 
 		foreach ($keyValuePairs as list($key, $value)) {
 			yield $operator->combineKeyWithValue(
