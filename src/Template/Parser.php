@@ -35,72 +35,16 @@ class Parser {
 	/**
 	 * Initializes the parser.
 	 *
-	 * The character sets and operators are defined here.
+	 * @param Operator[] $operators
+	 * The operators which are defined for URI templates. The keys are the
+	 * operator names, while the values give each operator's semantics.
 	 *
-	 * @todo
-	 * Inject the character sets and operators as parameters.
+	 * @param CharacterTypes $characterTypes
+	 * The defined character sets for URI templates.
 	 */
-	public function __construct() {
-		$this->characterTypes = $this->buildCharacterTypes();
-
-		$this->operators = array(
-			'' => $this->makeOperator('', ',', false, false, false),
-			'+' => $this->makeOperator('', ',', false, false, true),
-			'#' => $this->makeOperator('#', ',', false, false, true),
-			'.' => $this->makeOperator('.', '.', false, false, false),
-			'/' => $this->makeOperator('/', '/', false, false, false),
-			';' => $this->makeOperator(';', ';', true, false, false),
-			'?' => $this->makeOperator('?', '&', true, true, false),
-			'&' => $this->makeOperator('&', '&', true, true, false),
-		);
-	}
-
-	private function makeOperator($prefix, $separator, $expandNamedParameters, $requireFormStyleParameters, $permitSpecialCharacters) {
-		return new Operator($this->characterTypes, $prefix, $separator, $expandNamedParameters, $requireFormStyleParameters, $permitSpecialCharacters);
-	}
-
-	private function buildCharacterTypes() {
-		$characterTypes = new CharacterTypes;
-
-		$characterTypes->alpha = new RegexCharacterType('[A-Za-z]');
-		$characterTypes->digit = new RegexCharacterType('[0-9]');
-		$characterTypes->hexDigit =
-			$characterTypes->digit->or_(
-				new RegexCharacterType('[ABCDEFabcdef]')
-			);
-
-		$characterTypes->genDelims = new RegexCharacterType('[:\\/?#\\[\\]@]');
-		$characterTypes->subDelims = new RegexCharacterType('[!$&\'()*+,;=]');
-		$characterTypes->unreserved = new RegexCharacterType('[A-Za-z0-9\\-._~]');
-		$characterTypes->reserved =
-			$characterTypes->genDelims->or_(
-				$characterTypes->subDelims
-			);
-
-		$characterTypes->opLevel2 = new RegexCharacterType('[+#]');
-		$characterTypes->opLevel3 = new RegexCharacterType('[.\\/;?&]');
-		$characterTypes->opReserve = new RegexCharacterType('[=,!@|]');
-		$characterTypes->operator =
-			$characterTypes->opLevel2->or_(
-				$characterTypes->opLevel3
-			)->or_(
-				$characterTypes->opReserve
-			);
-
-		$characterTypes->ucschar = new RegexCharacterType(
-			'[\\x{A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}'
-			.'\\x{10000}-\\x{1FFFD}\\x{20000}-\\x{2FFFD}\\x{30000}-\\x{3FFFD}'
-			.'\\x{40000}-\\x{4FFFD}\\x{50000}-\\x{5FFFD}\\x{60000}-\\x{6FFFD}'
-			.'\\x{70000}-\\x{7FFFD}\\x{80000}-\\x{8FFFD}\\x{90000}-\\x{9FFFD}'
-			.'\\x{A0000}-\\x{AFFFD}\\x{B0000}-\\x{BFFFD}\\x{C0000}-\\x{CFFFD}'
-			.'\\x{D0000}-\\x{DFFFD}\\x{E1000}-\\x{EFFFD}]'
-		);
-
-		$characterTypes->iprivate = new RegexCharacterType(
-			'[\\x{E000}-\\x{F8FF}\\x{F0000}-\\x{FFFFD}\\x{100000}-\\x{10FFFD}]'
-		);
-
-		return $characterTypes;
+	public function __construct(array $operators, CharacterTypes $characterTypes) {
+		$this->characterTypes = $characterTypes;
+		$this->operators = $operators;
 	}
 
 	/**
@@ -118,28 +62,31 @@ class Parser {
 
 		$remaining = $templateString;
 
-		$rest = '';
 		while (\strlen($remaining)) {
-			// Either match a literal or an expression,
-			if ($remaining[0] === '{') {
-				// Expression.
-				list($expression, $rest) = $this->parseExpression($remaining);
-				if ($expression === false) {
-					throw new LogicError('Expected expression or literal at '.(\strlen($templateString) - \strlen($rest))." in '$templateString'");
+			try {
+				// Either match a literal or an expression,
+				if ($remaining[0] === '{') {
+					$parser = [ $this, 'parseExpression' ];
 				}
-				$parts[] = $expression;
-			}
-			else {
-				// Literal
-				list($literal, $rest) = $this->parseLiteral($remaining);
-				if ($literal === false) {
-					throw new LogicError('Expected expression or literal at '.(\strlen($templateString) - \strlen($rest))." in '$templateString'");
+				else {
+					$parser = [ $this, 'parseLiteral' ];
 				}
 
-				$parts[] = $literal;
-			}
+				$result = \call_user_func($parser, $remaining);
 
-			$remaining = $rest;
+				$newRemaining = $result->getRemainingInput();
+				if (\strlen($newRemaining) === \strlen($remaining)) {
+					// @codeCoverageIgnoreStart
+					throw new LogicError('Parser matched the empty string. This is not supposed to happen as it results in an infinite loop.');
+					// @codeCoverageIgnoreEnd
+				}
+				$remaining = $newRemaining;
+
+				$parts[] = $result->getPayload();
+			}
+			catch (ParseFailedException $ex) {
+				throw new LogicError('Expected expression or literal at '.(\strlen($templateString) - \strlen($remaining))." in '$templateString'");
+			}
 		}
 
 		return new \Uri\Template(...$parts);
@@ -151,22 +98,15 @@ class Parser {
 	 * @param string $string
 	 * The string from which to parse an expression.
 	 *
-	 * @return array
-	 * An array of two values. The first value is the parsed
-	 * `\Uri\Template\Parts\Part` instance which represents the expression, or
-	 * `false` if the parsing failed. The second value is the string remaining
-	 * after parsing, or just `$string` in case of failure.
-	 *
-	 * @todo
-	 * Define a contingency to throw on parse failures.
-	 *
-	 * @todo
-	 * Define a type for parse results which encapsulate a parsed value with a
-	 * remainder string.
+	 * @return ParseResult
+	 * An object holding the parsed expression and the remaining input.
 	 */
 	protected function parseExpression($string) {
 		if (!\preg_match("/^\\{(?<operator>{$this->characterTypes->operator})?(?<variables>{$this->getVarSpecRegex()}(?:,{$this->getVarSpecRegex()})*)\\}(?<rest>\X*)/u", $string, $matches)) {
-			return [false, $string];
+			throw new ParseFailedException(
+				'Expected expression',
+				$string
+			);
 		}
 
 		$operatorName = $matches['operator'];
@@ -196,9 +136,10 @@ class Parser {
 			$variables
 		);
 
-		$expression = new Expression($operator, $variables);
-
-		return [$expression, $matches['rest']];
+		return new ParseResult(
+			new Expression($operator, $variables),
+			$matches['rest']
+		);
 	}
 
 	/**
@@ -207,26 +148,22 @@ class Parser {
 	 * @param string $string
 	 * The string from which to parse a literal.
 	 *
-	 * @return array
-	 * An array of two values. The first value is the parsed
-	 * `\Uri\Template\Parts\Part` instance which represents the expression, or
-	 * `false` if the parsing failed. The second value is the string remaining
-	 * after parsing, or just `$string` in case of failure.
-	 *
-	 * @todo
-	 * Define a contingency to throw on parse failures.
-	 *
-	 * @todo
-	 * Define a type for parse results which encapsulate a parsed value with a
-	 * remainder string.
+	 * @return ParseResult
+	 * An object holding the parsed literal and the remaining input.
 	 */
 	protected function parseLiteral($string) {
-		$result = \preg_match("/^(?<literal>(?:{$this->getLiteralCharRegex()})*)(?<rest>\X*)$/u", $string, $matches);
+		$result = \preg_match("/^(?<literal>(?:{$this->getLiteralCharRegex()})+)(?<rest>\X*)$/u", $string, $matches);
 		if (!$result || !\strlen($matches['literal'])) {
-			return [false, $string];
+			throw new ParseFailedException(
+				'Expected literal',
+				$string
+			);
 		}
 
-		return [new Literal($this->characterTypes, $matches['literal']), $matches['rest']];
+		return new ParseResult(
+			new Literal($this->characterTypes, $matches['literal']),
+			$matches['rest']
+		);
 	}
 
 	/**
@@ -236,7 +173,6 @@ class Parser {
 	 * A regex string which matches a variable specification.
 	 */
 	protected function getVarSpecRegex() {
-		// TODO Permit level-4 modifier.
 		return "{$this->getVarNameRegex()}(?:{$this->getLevel4ModifierRegex()})?";
 	}
 

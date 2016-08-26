@@ -103,7 +103,7 @@ class Operator {
 	 * @param bool $requireFormStyleParameters
 	 * Whether form-style parameters are required for this operator.
 	 *
-	 * @param bool $permitSpecialChars
+	 * @param bool $permitSpecialCharacters
 	 * If `true`, percent-encoded characters and characters in the "reserved"
 	 * set will be expanded without further encoding (this is in addition to the
 	 * usual "unreserved" characters).
@@ -149,24 +149,21 @@ class Operator {
 	 *
 	 * @return string
 	 * The combination of all the values.
-	 *
-	 * @todo
-	 * Pluralize this to `combineValues`, and renamed `$parts` to `$values`.
 	 */
-	public function combineValue(array $parts) {
+	public function combineValues(array $values) {
 		// Don't use `null` parts (empty parts must be kept, though).
-		$parts = \array_filter(
-			$parts,
-			static function ($part) {
-				return !\is_null($part);
+		$values = \array_filter(
+			$values,
+			static function ($value) {
+				return !\is_null($value);
 			}
 		);
 
-		if (empty($parts)) {
+		if (empty($values)) {
 			return '';
 		}
 
-		return $this->prefix.\implode($this->separator, $parts);
+		return $this->prefix.\implode($this->separator, $values);
 	}
 
 	/**
@@ -243,42 +240,48 @@ class Operator {
 	 * The expansion of the value.
 	 */
 	public function simpleExpandValue($value) {
-		return (new ValueDispatcher)->handle(
-			$value,
-			null,
+		return (new ValueDispatcher($value, null))->handle(
 			[
 				'string' => function ($value) {
 					return $this->encode($value);
 				},
 
-				'array' => function ($array, $isSequential) {
-					$format = (
-						$isSequential
-						? function ($key, $value) {
+				'list' => function (array $array) {
+					return $this->simpleExpandArray(
+						$array,
+						function ($key, $value) {
 							return $this->encode($value);
 						}
-						: function ($key, $value) {
+					);
+				},
+
+				'assoc' => function (array $array) {
+					return $this->simpleExpandArray(
+						$array,
+						function ($key, $value) {
 							return $this->encode($key).','.$this->encode($value);
 						}
 					);
-
-					$parts = [];
-					foreach ($array as $key => $value) {
-						if (\is_null($value)) {
-							continue;
-						}
-
-						$parts[] = $format($key, $value);
-					}
-
-					if (empty($parts)) {
-						return null;
-					}
-
-					return \implode(',', $parts);
 				}
 			]
 		);
+	}
+
+	private function simpleExpandArray(array $array, callable $formatter) {
+		$parts = [];
+		foreach ($array as $key => $value) {
+			if (\is_null($value)) {
+				continue;
+			}
+
+			$parts[] = \call_user_func($formatter, $key, $value);
+		}
+
+		if (empty($parts)) {
+			return null;
+		}
+
+		return \implode(',', $parts);
 	}
 }
 ?>

@@ -1,11 +1,8 @@
 <?php
 namespace Uri\Template\Parts;
 
-use \Base\Exceptions\LogicError;
 use \Uri\Lexical\CharacterTypes;
-use \Uri\Template\Variables\Variable;
 use \Uri\Template\Operator;
-use \Uri\Template\ValueDispatcher;
 
 /**
  * Represents an expression part of a URI template.
@@ -22,7 +19,7 @@ class Expression implements Part {
 	private $operator;
 
 	/**
-	 * @var array<Variable> $variables
+	 * @var \Uri\Template\Variables\Variable[] $variables
 	 * The variables which the expression will expand.
 	 */
 	private $variables;
@@ -30,13 +27,10 @@ class Expression implements Part {
 	/**
 	 * Initializes an `Expression` instance.
 	 *
-	 * @param CharacterTypes $charTypes
-	 * The defined character sets.
-	 *
 	 * @param Operator $operator
 	 * The operator defining the expression's semantics.
 	 *
-	 * @param array<Variable> $variables
+	 * @param \Uri\Template\Variables\Variable[] $variables
 	 * The variables which will be expanded by the expression.
 	 */
 	public function __construct(Operator $operator, array $variables) {
@@ -58,7 +52,7 @@ class Expression implements Part {
 			);
 		}
 
-		return $this->operator->combineValue($parts);
+		return $this->operator->combineValues($parts);
 	}
 }
 ?>

@@ -4,6 +4,7 @@ use PHPUnit\Framework\TestCase;
 use Uri\Lexical\CharacterTypes;
 use Uri\Lexical\RegexCharacterType;
 use \Uri\Template\Operator;
+use \Uri\Template\ParseFailedException;
 use \Uri\Template\ValueDispatcher;
 
 class TemplateTest extends TestCase
@@ -62,44 +63,57 @@ class TemplateTest extends TestCase
 	 * @dataProvider valueDispatcherProvider
 	 */
 	public function testValueDispatcher($value, $default, array $handlers, $expected) {
-		$dispatcher = new ValueDispatcher;
+		$dispatcher = new ValueDispatcher($value, $default);
 
-		$result = $dispatcher->handle($value, $default, $handlers);
+		$result = $dispatcher->handle($handlers);
 
 		$this->assertSame($expected, $result);
 	}
 
 	public function valueDispatcherProvider() {
 		$stringValue = '25';
-		$arrayValue = [ 'test' ];
+		$listValue = [ 'test' ];
+		$assocValue = [ 'a' => 'test' ];
 		$defaultValue = new \stdClass();
 
 		$stringHandler = function () { return 'string'; };
-		$arrayHandler = function () { return 'array'; };
+		$listHandler = function () { return 'list'; };
+		$assocHandler = function () { return 'assoc'; };
 
-		$allHandlers = [ 'string' => $stringHandler, 'array' => $arrayHandler ];
-		$noStringHandlers = [ 'array' => $arrayHandler ];
-		$noArrayHandlers = [ 'string' => $stringHandler ];
+		$allHandlers = [
+			'string' => $stringHandler,
+			'list' => $listHandler,
+			'assoc' => $assocHandler
+		];
+		$noStringHandlers = [ 'list' => $listHandler, 'assoc' => $assocHandler ];
+		$noListHandlers = [ 'string' => $stringHandler, 'assoc' => $assocHandler ];
+		$noAssocHandlers = [ 'string' => $stringHandler, 'list' => $listHandler ];
 
         return [
 	        [ $stringValue, $defaultValue, $allHandlers, 'string' ],
-	        [ $arrayValue, $defaultValue, $allHandlers, 'array' ],
+	        [ $listValue, $defaultValue, $allHandlers, 'list' ],
+	        [ $assocValue, $defaultValue, $allHandlers, 'assoc' ],
 	        [ $stringValue, $defaultValue, $noStringHandlers, $defaultValue ],
-	        [ $arrayValue, $defaultValue, $noStringHandlers, 'array' ],
-	        [ $stringValue, $defaultValue, $noArrayHandlers, 'string' ],
-	        [ $arrayValue, $defaultValue, $noArrayHandlers, $defaultValue ],
+	        [ $listValue, $defaultValue, $noStringHandlers, 'list' ],
+	        [ $assocValue, $defaultValue, $noStringHandlers, 'assoc' ],
+	        [ $stringValue, $defaultValue, $noListHandlers, 'string' ],
+	        [ $listValue, $defaultValue, $noListHandlers, $defaultValue ],
+	        [ $assocValue, $defaultValue, $noListHandlers, 'assoc' ],
+	        [ $stringValue, $defaultValue, $noAssocHandlers, 'string' ],
+	        [ $listValue, $defaultValue, $noAssocHandlers, 'list' ],
+	        [ $assocValue, $defaultValue, $noAssocHandlers, $defaultValue ],
 	        [ null, $defaultValue, $allHandlers, $defaultValue ],
         ];
 	}
 
 	/**
-	 * @dataProvider operatorGetDefaultKeyProvider
+	 * @dataProvider operatorChooseDefaultKeyProvider
 	 */
-	public function testOperatorGetDefaultKey(Operator $operator, $varName, $expected) {
-		$this->assertEquals($expected, $operator->getDefaultKey($varName));
+	public function testOperatorChooseDefaultKey(Operator $operator, $varName, $expected) {
+		$this->assertEquals($expected, $operator->chooseDefaultKey($varName));
 	}
 
-	public function operatorGetDefaultKeyProvider() {
+	public function operatorChooseDefaultKeyProvider() {
 		$varName = 'my_var';
 
 		return [
@@ -115,13 +129,13 @@ class TemplateTest extends TestCase
 	}
 
 	/**
-	 * @dataProvider operatorCombineValueProvider
+	 * @dataProvider operatorCombineValuesProvider
 	 */
-	public function testOperatorCombineValue(Operator $operator, $parts, $expected) {
-		$this->assertEquals($expected, $operator->combineValue($parts));
+	public function testOperatorCombineValues(Operator $operator, $parts, $expected) {
+		$this->assertEquals($expected, $operator->combineValues($parts));
 	}
 
-	public function operatorCombineValueProvider() {
+	public function operatorCombineValuesProvider() {
 		return [
 			[ $this->operators[''], ['', 'b', null, 'c'], ',b,c' ],
 			[ $this->operators['+'], ['', 'b', null, 'c'], ',b,c' ],
@@ -197,7 +211,7 @@ class TemplateTest extends TestCase
 	 */
 	public function testTemplate($templateString, $expected)
 	{
-		$parser = new \Uri\Template\Parser();
+		$parser = (new \Uri\Template\ParserFactory)->create();
 		$template = $parser->parse($templateString);
 		$result = $template->expand($this->variables);
 		$this->assertEquals($expected, $result);
@@ -211,7 +225,7 @@ class TemplateTest extends TestCase
 			$this->expectException($expectedException);
 		}
 
-		$parser = new \Uri\Template\Parser();
+		$parser = (new \Uri\Template\ParserFactory)->create();
 		$template = $parser->parse($templateString);
 	}
 
@@ -425,6 +439,15 @@ class TemplateTest extends TestCase
 			[ '{keys_some_undef:5}', 'semi,%3B,comma,%2C' ],
 			[ '{keys_all_undef:5}', '' ],
 		];
+	}
+
+	public function testParseFailedException() {
+		$message = 'Expected something else';
+		$input = 'This is a string';
+		$ex = new ParseFailedException($message, $input);
+
+		$this->assertSame($message, $ex->getMessage());
+		$this->assertSame($input, $ex->getString());
 	}
 }
 ?>
