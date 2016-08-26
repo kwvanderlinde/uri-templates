@@ -2,6 +2,7 @@
 namespace Uri\Template;
 
 use \Uri\Lexical\CharacterTypes;
+use \Uri\Template\Variables\Variable;
 
 class Operator {
 	private $charTypes;
@@ -20,8 +21,12 @@ class Operator {
 		$this->permitSpecialCharacters = $permitSpecialCharacters;
 	}
 
-	public function expandNamedParameters() {
-		return $this->expandNamedParameters;
+	public function getDefaultKey(Variable $var) {
+		if ($this->expandNamedParameters) {
+			return $var->getName();
+		}
+
+		return null;
 	}
 
 	public function combineValue(array $parts) {

@@ -32,12 +32,7 @@ class Expression implements Part {
 	}
 
 	protected function expandValue(Variable $var, $value) {
-		if ($this->operator->expandNamedParameters()) {
-			$prefixVar = $var->getName();
-		}
-		else {
-			$prefixVar = null;
-		}
+		$prefixVar = $this->operator->getDefaultKey($var);
 
 		return (new ValueDispatcher)->handle(
 			$value,
