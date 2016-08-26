@@ -8,6 +8,7 @@ namespace Uri\Template;
  * These map to the terms 'undefined' (For `null`), 'string' (For `string`),
  * 'list' (for sequential `array`s), and 'array' (for associative arrays).
  *
+ * @since 1.0.0
  */
 class ValueDispatcher {
 	/**
@@ -32,6 +33,8 @@ class ValueDispatcher {
 	 * @param mixed $defaultResult
 	 * If `$value` is `null`, or no handler is available for `$value`, then this
 	 * is the value that will be returned.
+	 *
+	 * @since 1.0.0
 	 */
 	public function __construct($value, $defaultResult) {
 		$this->value = $value;
@@ -50,6 +53,8 @@ class ValueDispatcher {
 	 * @return mixed
 	 * The result of applying a handler to the value, or the default value if
 	 * the value is `null` or no appropriate handler is available.
+	 *
+	 * @since 1.0.0
 	 */
 	public function handle(array $handlers) {
 		if (\is_null($this->value)) {

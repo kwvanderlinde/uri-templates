@@ -3,6 +3,8 @@ namespace Uri\Lexical;
 
 /**
  * Represents a union of character sets.
+ *
+ * @since 1.0.0
  */
 class UnionCharacterType extends AbstractCharacterType implements CharacterType {
 	/**
@@ -18,6 +20,8 @@ class UnionCharacterType extends AbstractCharacterType implements CharacterType 
 	 *
 	 * @param CharacterType ...$types
 	 * The sets which will be unioned together to form a new character set.
+	 *
+	 * @since 1.0.0
 	 */
 	public function __construct(CharacterType ...$types) {
 		$this->types = $types;

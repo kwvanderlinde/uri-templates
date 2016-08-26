@@ -10,6 +10,8 @@ use \Uri\Template\Operator;
  * An expression allows injecting values into a URI template. The exact rules
  * for this injection depends on the expression's operator and variable
  * specifications.
+ *
+ * @since 1.0.0
  */
 class Expression implements Part {
 	/**
@@ -32,6 +34,8 @@ class Expression implements Part {
 	 *
 	 * @param \Uri\Template\Variables\Variable[] $variables
 	 * The variables which will be expanded by the expression.
+	 *
+	 * @since 1.0.0
 	 */
 	public function __construct(Operator $operator, array $variables) {
 		$this->operator = $operator;

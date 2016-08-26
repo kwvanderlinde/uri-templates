@@ -15,6 +15,8 @@ use \Uri\Lexical\UnionCharacterType;
  *
  * @return bool
  * `true` if the array is sequential and numeric. Otherwise, `false`.
+ *
+ * @since 1.0.0
  */
 function isSequentialArray(array $array) {
 	return !$array || (\array_keys($array) === \range(0, \count($array) - 1));
@@ -44,6 +46,8 @@ function isSequentialArray(array $array) {
  *
  * @return string
  * A percent-encoded string equivalent to `$string`.
+ *
+ * @since 1.0.0
  */
 function percentEncode($string, $keepEncoded, CharacterType... $safeTypes) {
 	// Combine the allowed types.

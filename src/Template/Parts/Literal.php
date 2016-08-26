@@ -9,6 +9,8 @@ use \Uri\Lexical\CharacterTypes;
  * The expansion of the literal may not have the identical representation as in
  * the source string because all characters outside the "literals" character set
  * are percent encoded.
+ *
+ * @since 1.0.0
  */
 class Literal implements Part {
 	/**
@@ -31,6 +33,8 @@ class Literal implements Part {
 	 *
 	 * @param string $string
 	 * The string which should be expanded literally.
+	 *
+	 * @since 1.0.0
 	 */
 	public function __construct(CharacterTypes $charTypes, $string) {
 		$this->charTypes = $charTypes;
@@ -51,6 +55,8 @@ class Literal implements Part {
 	 *
 	 * @return string
 	 * The input string after percent encoding.
+	 *
+	 * @since 1.0.0
 	 */
 	public function expand(array $variables) {
 		return $this->string;

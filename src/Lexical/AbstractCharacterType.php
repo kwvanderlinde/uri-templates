@@ -3,6 +3,10 @@ namespace Uri\Lexical;
 
 /**
  * A helper class for defining character types.
+ *
+ * @api
+ *
+ * @since 1.0.0
  */
 abstract class AbstractCharacterType implements CharacterType {
 	/**
